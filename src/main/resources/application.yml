@@ -1,0 +1,46 @@
+server:
+  port: 8443
+
+cloud:
+  aws:
+    region:
+      static: ${S3_REGION:ecrregion}
+    s3:
+      bucket: ${S3_BUCKETNAME:ecrname}
+
+spring:
+  profiles:
+    active: local
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:dbtablename}
+    username: ${DB_USERNAME:admin}
+    password: ${DB_PASSWORD:pw}
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    database-platform: org.hibernate.dialect.MySQLDialect
+    properties:
+      hibernate:
+        format_sql: true
+    show-sql: true
+
+jwt:
+  secretKey: ${JWT_SECRET_KEY:1234512345}
+  access:
+    expiration: ${JWT_ACCESS_EXPIRATION:3600000}
+    header: ${JWT_ACCESS_HEADER:Authorization}
+  refresh:
+    expiration: ${JWT_REFRESH_EXPIRATION:3600000}
+    header: ${JWT_REFRESH_HEADER:RefreshToken}
+
+# Springdoc (Swagger UI)
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    url: /v3/api-docs
+    display-request-duration: true
+    groups-order: ASC
