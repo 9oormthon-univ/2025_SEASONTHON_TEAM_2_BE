@@ -49,7 +49,7 @@ dependencies {
     implementation 'software.amazon.awssdk:s3'
 
     /* ====== API 문서 ====== */
-    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.7.0'
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.11'
 
     /* ====== Lombok ====== */
     compileOnly 'org.projectlombok:lombok'
