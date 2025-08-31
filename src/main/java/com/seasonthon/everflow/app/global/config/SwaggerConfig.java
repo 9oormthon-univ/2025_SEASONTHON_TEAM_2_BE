@@ -39,6 +39,6 @@ public class SwaggerConfig {
         return new Info()
                 .title("Everflow BACKEND SERVER")
                 .description("Everflow API swagger page")
-                .version("1.0.1");
+                .version("1.0.2");
     }
 }
