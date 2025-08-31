@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -19,6 +20,7 @@ import org.springframework.security.core.authority.mapping.NullAuthoritiesMapper
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+@Slf4j
 @RequiredArgsConstructor
 public class JwtAuthenticationProcessingFilter extends OncePerRequestFilter {
 
@@ -35,19 +37,17 @@ public class JwtAuthenticationProcessingFilter extends OncePerRequestFilter {
             return;
         }
 
-        String refreshToken = jwtService.extractRefreshToken(request)
-                .filter(jwtService::isTokenValid)
-                .orElse(null);
+        Optional<String> refreshTokenOpt = jwtService.extractRefreshToken(request);
 
-        if (refreshToken != null) {
-            checkRefreshTokenAndReIssueAccessToken(response, refreshToken);
+        if (refreshTokenOpt.isPresent() && jwtService.isTokenValid(refreshTokenOpt.get())) {
+            checkRefreshTokenAndReIssueAccessToken(response, refreshTokenOpt.get());
             return;
         }
 
         checkAccessTokenAndAuthentication(request, response, filterChain);
     }
 
-    public void checkRefreshTokenAndReIssueAccessToken(HttpServletResponse response, String refreshToken) {
+    public void checkRefreshTokenAndReIssueAccessToken(HttpServletResponse response, String refreshToken) throws ServletException, IOException {
         userRepository.findByRefreshToken(refreshToken)
                 .ifPresent(user -> {
                     if (user.isWithdrawn()) {
@@ -76,7 +76,8 @@ public class JwtAuthenticationProcessingFilter extends OncePerRequestFilter {
             String accessToken = accessTokenOpt.get();
 
             if (tokenBlacklistService.isTokenBlacklisted(accessToken)) {
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                // 토큰이 블랙리스트에 있으면 401 에러 반환
+                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "토큰이 유효하지 않습니다.");
                 return;
             }
 
@@ -89,9 +90,14 @@ public class JwtAuthenticationProcessingFilter extends OncePerRequestFilter {
                             }
                         });
             } catch (Exception e) {
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                // 토큰 검증 실패 시 401 에러 반환
+                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "토큰이 유효하지 않습니다.");
                 return;
             }
+        } else {
+            // 토큰이 아예 없으면 401 에러 반환
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "토큰이 유효하지 않습니다.");
+            return;
         }
 
         filterChain.doFilter(request, response);
