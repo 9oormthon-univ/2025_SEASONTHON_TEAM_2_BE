@@ -28,12 +28,10 @@ public class Appointment {
     @Column(name = "appointment_id")
     private Long id;
 
-    // 약속을 제안한 사용자와의 다대일 관계
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "propose_user_id", nullable = false)
     private User proposeUser;
 
-    // 약속이 속한 가족과의 다대일 관계 (Family 엔터티가 있다고 가정)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "family_id", nullable = false)
     private Family family;
@@ -41,10 +39,10 @@ public class Appointment {
     @Column(name = "name", nullable = false)
     private String name;
 
-    @Column(name = "content") // 'comment'에서 'content'로 변경
+    @Column(name = "content")
     private String content;
 
-    @Column(name = "location") // 'location' 필드 추가
+    @Column(name = "location")
     private String location;
 
     @Column(name = "start_time", nullable = false)
@@ -54,7 +52,7 @@ public class Appointment {
     private LocalDate endTime;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "color") // 'color' 필드 추가
+    @Column(name = "color")
     private AppointmentColor color;
 
     @Enumerated(EnumType.STRING)
@@ -83,10 +81,9 @@ public class Appointment {
         this.startTime = startTime;
         this.endTime = endTime;
         this.color = color;
-        this.status = AcceptStatus.PENDING; // 생성 시 기본 상태는 '대기 중'
+        this.status = AcceptStatus.PENDING;
     }
 
-    //== 편의 메서드 ==//
     public void updateStatus(AcceptStatus status) {
         this.status = status;
     }

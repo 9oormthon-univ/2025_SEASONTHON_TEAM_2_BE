@@ -13,7 +13,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -90,7 +89,7 @@ public class AppointmentService {
                 .sorted()
                 .collect(Collectors.toList());
 
-        // 4. 결과를 DTO에 담아 반환 (기존과 동일)
+        // 4. 결과를 DTO에 담아 반환
         return new AppointmentResponseDto.AppointmentMonthResponseDto(daysWithAppointments);
     }
 }
