@@ -12,6 +12,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.YearMonth;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -24,7 +27,7 @@ public class AppointmentService {
     private final UserRepository userRepository; // User 정보를 가져오기 위해 필요
 
     @Transactional
-    public AppointmentResponseDto createAppointment(AppointmentRequestDto requestDto, Long proposeUserId) {
+    public AppointmentResponseDto.AppointmentAddResponseDto addAppointment(AppointmentRequestDto requestDto, Long proposeUserId) {
         // 1. 약속을 제안한 사용자(proposeUser) 정보를 DB에서 조회
         User proposeUser = userRepository.findById(proposeUserId)
                 .orElseThrow(() -> new IllegalArgumentException("제안자를 찾을 수 없습니다."));
@@ -32,7 +35,7 @@ public class AppointmentService {
         // 2. Appointment 엔터티 생성
         Appointment appointment = Appointment.builder()
                 .proposeUser(proposeUser)
-                .family(proposeUser.getFamily()) // 제안자의 가족 정보를 가져옴
+                .family(proposeUser.getFamily())
                 .name(requestDto.getName())
                 .content(requestDto.getContent())
                 .location(requestDto.getLocation())
@@ -62,6 +65,32 @@ public class AppointmentService {
         Appointment savedAppointment = appointmentRepository.save(appointment);
 
         // 6. 생성된 약속의 ID를 담아 응답 반환
-        return new AppointmentResponseDto(savedAppointment.getId(), savedAppointment.getName());
+        return new AppointmentResponseDto.AppointmentAddResponseDto(savedAppointment.getId(), savedAppointment.getName());
+    }
+
+    public AppointmentResponseDto.AppointmentMonthResponseDto getMonthAppointment(Long familyId, int year, int month) {
+        // 1. 조회할 월의 시작일과 종료일 계산
+        YearMonth yearMonth = YearMonth.of(year, month);
+        LocalDate startOfMonth = yearMonth.atDay(1);
+        LocalDate endOfMonth = yearMonth.atEndOfMonth();
+
+        // 2. Repository를 통해 해당 기간의 약속 데이터를 조회
+        List<Appointment> appointments = appointmentRepository.findAppointmentsOverlappingWithDateRange(familyId, startOfMonth, endOfMonth);
+
+        // 3. flatMap을 사용하여 각 약속의 기간에 포함되는 모든 날짜를 추출
+        List<String> daysWithAppointments = appointments.stream()
+                .flatMap(appointment -> {
+                    LocalDate startDate = appointment.getStartTime();
+                    LocalDate endDate = appointment.getEndTime();
+
+                    return startDate.datesUntil(endDate.plusDays(1));
+                })
+                .map(LocalDate::toString)
+                .distinct()
+                .sorted()
+                .collect(Collectors.toList());
+
+        // 4. 결과를 DTO에 담아 반환 (기존과 동일)
+        return new AppointmentResponseDto.AppointmentMonthResponseDto(daysWithAppointments);
     }
 }

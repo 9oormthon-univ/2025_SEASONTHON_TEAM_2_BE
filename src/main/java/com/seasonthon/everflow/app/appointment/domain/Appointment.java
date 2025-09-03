@@ -53,8 +53,9 @@ public class Appointment {
     @Column(name = "end_time", nullable = false)
     private LocalDate endTime;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "color") // 'color' 필드 추가
-    private String color;
+    private AppointmentColor color;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
@@ -73,7 +74,7 @@ public class Appointment {
     private LocalDateTime updatedAt;
 
     @Builder
-    public Appointment(User proposeUser, Family family, String name, String content, String location, LocalDate startTime, LocalDate endTime, String color) {
+    public Appointment(User proposeUser, Family family, String name, String content, String location, LocalDate startTime, LocalDate endTime, AppointmentColor color) {
         this.proposeUser = proposeUser;
         this.family = family;
         this.name = name;
@@ -90,7 +91,7 @@ public class Appointment {
         this.status = status;
     }
 
-    public void updateDetails(String name, String content, String location, LocalDate startTime, LocalDate endTime, String color) {
+    public void updateDetails(String name, String content, String location, LocalDate startTime, LocalDate endTime, AppointmentColor color) {
         this.name = name;
         this.content = content;
         this.location = location;
