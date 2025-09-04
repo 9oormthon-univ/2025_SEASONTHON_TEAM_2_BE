@@ -1,14 +1,7 @@
 package com.seasonthon.everflow.app.user.domain;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EntityListeners;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
+
 import java.time.LocalDateTime;
 import java.util.UUID;
 import lombok.Builder;
@@ -64,6 +57,10 @@ public class User {
 
     @Column(name = "last_login_at")
     private LocalDateTime lastLoginAt;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "family_id")
+    private Family family;
 
     @Builder
     public User(String oauthId, String email, String nickname, String profileUrl, RoleType roleType, SocialType socialType, LocalDateTime lastLoginAt) {

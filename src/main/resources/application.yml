@@ -4,18 +4,18 @@ server:
 cloud:
   aws:
     region:
-      static: ${S3_REGION:ecrregion}
+      static: ${S3_REGION:ap-northeast-2}
     s3:
-      bucket: ${S3_BUCKETNAME:ecrname}
+      bucket: ${S3_BUCKETNAME:everflowbucket}
 
 spring:
   profiles:
     active: local
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:dbtablename}
-    username: ${DB_USERNAME:admin}
-    password: ${DB_PASSWORD:pw}
+    url: jdbc:mysql://localhost:3306/everbase
+    username: root
+    password: tjdcodnjs
 
   jpa:
     hibernate:
@@ -27,7 +27,7 @@ spring:
     show-sql: true
 
 jwt:
-  secretKey: ${JWT_SECRET_KEY:1234512345}
+  secretKey: ${JWT_SECRET_KEY:47baacaf872ee6fb2c55ef59f48e2b3463173ff7f472b77ac4159cfdf4b6a248}
   access:
     expiration: ${JWT_ACCESS_EXPIRATION:3600000}
     header: ${JWT_ACCESS_HEADER:Authorization}
