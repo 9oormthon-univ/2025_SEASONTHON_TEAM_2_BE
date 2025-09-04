@@ -3,9 +3,12 @@ package com.seasonthon.everflow.app.appointment.controller;
 import com.seasonthon.everflow.app.appointment.dto.AppointmentRequestDto;
 import com.seasonthon.everflow.app.appointment.dto.AppointmentResponseDto;
 import com.seasonthon.everflow.app.appointment.service.AppointmentService;
+import com.seasonthon.everflow.app.global.oauth.domain.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import com.seasonthon.everflow.app.user.domain.User;
 
 import jakarta.validation.Valid;
 import java.net.URI;
@@ -21,10 +24,10 @@ public class AppointmentController {
 
     @PostMapping
     public ResponseEntity<AppointmentResponseDto.AppointmentAddResponseDto> addAppointment(
-            @Valid @RequestBody AppointmentRequestDto.AppointmentAddRequestDto requestDto
-            //@AuthenticationPrincipal User user // Spring Security를 통해 인증된 사용자 정보 가져오기
+            @Valid @RequestBody AppointmentRequestDto.AppointmentAddRequestDto requestDto,
+            @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-        Long userId = 1L;
+        Long userId = userDetails.getUserId();
         AppointmentResponseDto.AppointmentAddResponseDto responseDto = appointmentService.addAppointment(requestDto, userId);
 
         // 생성된 리소스의 URI를 Location 헤더에 담아 201 Created 응답 반환
@@ -91,14 +94,12 @@ public class AppointmentController {
     @PatchMapping("/{appointmentId}/participant")
     public ResponseEntity<AppointmentResponseDto.MessageResponseDto> updateParticipantStatus(
             @PathVariable Long appointmentId,
-            @RequestBody AppointmentRequestDto.UpdateParticipantStatusRequestDto requestDto) {
+            @RequestBody AppointmentRequestDto.UpdateParticipantStatusRequestDto requestDto,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
 
-        // ❗️ 중요: 실제 프로젝트에서는 Spring Security의 @AuthenticationPrincipal을 사용해
-        //           현재 로그인한 사용자의 ID를 안전하게 가져와야 합니다.
-        Long currentUserId = 2L; // 임시 사용자 ID
-
+        Long userId = userDetails.getUserId();
         AppointmentResponseDto.MessageResponseDto responseDto =
-                appointmentService.updateParticipantStatus(appointmentId, currentUserId, requestDto.getAcceptStatus());
+                appointmentService.updateParticipantStatus(appointmentId, userId, requestDto.getAcceptStatus());
 
         return ResponseEntity.ok(responseDto);
     }
