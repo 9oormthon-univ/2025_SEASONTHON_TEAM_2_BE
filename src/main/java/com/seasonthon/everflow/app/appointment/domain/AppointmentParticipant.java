@@ -33,4 +33,8 @@ public class AppointmentParticipant {
     @Enumerated(EnumType.STRING)
     @Column(name = "accept_status")
     private AcceptStatus acceptStatus; // PENDING, ACCEPTED, REJECTED
+
+    public void updateStatus(AcceptStatus acceptStatus) {
+        this.acceptStatus = acceptStatus;
+    }
 }

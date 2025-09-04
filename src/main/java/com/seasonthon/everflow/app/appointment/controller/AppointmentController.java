@@ -21,7 +21,7 @@ public class AppointmentController {
 
     @PostMapping
     public ResponseEntity<AppointmentResponseDto.AppointmentAddResponseDto> addAppointment(
-            @Valid @RequestBody AppointmentRequestDto requestDto
+            @Valid @RequestBody AppointmentRequestDto.AppointmentAddRequestDto requestDto
             //@AuthenticationPrincipal User user // Spring Security를 통해 인증된 사용자 정보 가져오기
     ) {
         Long userId = 1L;
@@ -84,6 +84,21 @@ public class AppointmentController {
     @DeleteMapping("/{appointment_id}")
     public ResponseEntity<AppointmentResponseDto.MessageResponseDto> deleteAppointment(@PathVariable Long appointment_id) {
         AppointmentResponseDto.MessageResponseDto responseDto = appointmentService.deleteAppointment(appointment_id);
+
+        return ResponseEntity.ok(responseDto);
+    }
+
+    @PatchMapping("/{appointmentId}/participant")
+    public ResponseEntity<AppointmentResponseDto.MessageResponseDto> updateParticipantStatus(
+            @PathVariable Long appointmentId,
+            @RequestBody AppointmentRequestDto.UpdateParticipantStatusRequestDto requestDto) {
+
+        // ❗️ 중요: 실제 프로젝트에서는 Spring Security의 @AuthenticationPrincipal을 사용해
+        //           현재 로그인한 사용자의 ID를 안전하게 가져와야 합니다.
+        Long currentUserId = 2L; // 임시 사용자 ID
+
+        AppointmentResponseDto.MessageResponseDto responseDto =
+                appointmentService.updateParticipantStatus(appointmentId, currentUserId, requestDto.getAcceptStatus());
 
         return ResponseEntity.ok(responseDto);
     }

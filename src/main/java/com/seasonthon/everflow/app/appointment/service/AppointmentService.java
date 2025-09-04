@@ -5,6 +5,7 @@ import com.seasonthon.everflow.app.appointment.domain.Appointment;
 import com.seasonthon.everflow.app.appointment.domain.AppointmentParticipant;
 import com.seasonthon.everflow.app.appointment.dto.AppointmentRequestDto;
 import com.seasonthon.everflow.app.appointment.dto.AppointmentResponseDto;
+import com.seasonthon.everflow.app.appointment.repository.AppointmentParticipantRepository;
 import com.seasonthon.everflow.app.appointment.repository.AppointmentRepository;
 import com.seasonthon.everflow.app.user.domain.User;
 import com.seasonthon.everflow.app.user.repository.UserRepository;
@@ -25,10 +26,11 @@ import java.util.stream.Collectors;
 public class AppointmentService {
 
     private final AppointmentRepository appointmentRepository;
+    private final AppointmentParticipantRepository appointmentParticipantRepository;
     private final UserRepository userRepository; // User 정보를 가져오기 위해 필요
 
     @Transactional
-    public AppointmentResponseDto.AppointmentAddResponseDto addAppointment(AppointmentRequestDto requestDto, Long proposeUserId) {
+    public AppointmentResponseDto.AppointmentAddResponseDto addAppointment(AppointmentRequestDto.AppointmentAddRequestDto requestDto, Long proposeUserId) {
         // 1. 약속을 제안한 사용자(proposeUser) 정보를 DB에서 조회
         User proposeUser = userRepository.findById(proposeUserId)
                 .orElseThrow(() -> new IllegalArgumentException("제안자를 찾을 수 없습니다."));
@@ -154,6 +156,21 @@ public class AppointmentService {
         appointmentRepository.deleteById(appointmentId);
 
         return new AppointmentResponseDto.MessageResponseDto("약속을 삭제하셨습니다.");
+    }
+
+    @Transactional // 데이터를 변경하므로 readOnly가 아닌 @Transactional을 사용합니다.
+    public AppointmentResponseDto.MessageResponseDto updateParticipantStatus(Long appointmentId, Long userId, AcceptStatus newStatus) {
+        // 1. appointmentId와 userId로 변경해야 할 AppointmentParticipant 레코드를 찾습니다.
+        AppointmentParticipant participant = appointmentParticipantRepository.findByAppointmentIdAndUserId(appointmentId, userId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 약속의 참여자가 아닙니다."));
+
+        // 2. 엔터티의 상태 업데이트 메서드를 호출합니다.
+        participant.updateStatus(newStatus);
+
+        // 3. @Transactional에 의해 메서드가 종료될 때 변경된 내용이 자동으로 DB에 반영됩니다 (Dirty Checking).
+        //    따로 save()를 호출할 필요가 없습니다.
+
+        return new AppointmentResponseDto.MessageResponseDto("참여 상태가 성공적으로 변경되었습니다.");
     }
 
 }
