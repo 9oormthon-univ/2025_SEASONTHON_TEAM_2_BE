@@ -114,4 +114,17 @@ public class AppointmentService {
         );
     }
 
+    @Transactional
+    public AppointmentResponseDto.MessageResponseDto deleteAppointment(Long appointmentId) {
+        // 1. 삭제하려는 약속이 실제로 존재하는지 확인합니다. (존재하지 않으면 예외 발생)
+        if (!appointmentRepository.existsById(appointmentId)) {
+            throw new IllegalArgumentException("해당 약속을 찾을 수 없습니다. id=" + appointmentId);
+        }
+
+        // 2. JpaRepository가 기본으로 제공하는 deleteById 메서드를 사용하여 약속을 삭제합니다.
+        appointmentRepository.deleteById(appointmentId);
+
+        return new AppointmentResponseDto.MessageResponseDto("약속을 삭제하셨습니다.");
+    }
+
 }

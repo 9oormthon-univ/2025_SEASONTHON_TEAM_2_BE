@@ -33,7 +33,7 @@ public class AppointmentController {
 
     @GetMapping("/family/{family_id}")
     public ResponseEntity<AppointmentResponseDto.AppointmentMonthResponseDto> getMonthAppointment(
-            @PathVariable Long familyId,
+            @PathVariable Long family_id,
             @RequestParam int year,
             @RequestParam int month) {
 
@@ -42,7 +42,7 @@ public class AppointmentController {
         }
 
         AppointmentResponseDto.AppointmentMonthResponseDto responseDto =
-                appointmentService.getMonthAppointment(familyId, year, month);
+                appointmentService.getMonthAppointment(family_id, year, month);
 
         return ResponseEntity.ok(responseDto);
     }
@@ -52,6 +52,13 @@ public class AppointmentController {
             @PathVariable Long appointment_id ) {
         AppointmentResponseDto.AppointmentDetailResponseDto responseDto =
                 appointmentService.getAppointment(appointment_id);
+
+        return ResponseEntity.ok(responseDto);
+    }
+
+    @DeleteMapping("/{appointment_id}")
+    public ResponseEntity<AppointmentResponseDto.MessageResponseDto> deleteAppointment(@PathVariable Long appointment_id) {
+        AppointmentResponseDto.MessageResponseDto responseDto = appointmentService.deleteAppointment(appointment_id);
 
         return ResponseEntity.ok(responseDto);
     }

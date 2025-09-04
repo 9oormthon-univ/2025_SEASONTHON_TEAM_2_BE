@@ -32,4 +32,10 @@ public class AppointmentResponseDto{
         private String proposeUserName;
 
     }
+
+    @Getter
+    @AllArgsConstructor
+    public static class MessageResponseDto {
+        private String message;
+    }
 }
