@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
 import java.net.URI;
+import java.time.YearMonth;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/appointments")
@@ -45,6 +47,29 @@ public class AppointmentController {
                 appointmentService.getMonthAppointment(family_id, year, month);
 
         return ResponseEntity.ok(responseDto);
+    }
+
+    @GetMapping("/family/{family_id}/date")
+    public ResponseEntity<List<AppointmentResponseDto.AppointmentDateResponseDto>> getDateAppointment(
+            @PathVariable Long family_id,
+            @RequestParam int year,
+            @RequestParam int month,
+            @RequestParam int day) {
+
+        if (month < 1 || month > 12) {
+            throw new IllegalArgumentException("월(month)은 1에서 12 사이의 값이어야 합니다.");
+        }
+
+        // 간단한 날짜 유효성 검사 (실제 월의 마지막 날을 확인하는 것이 더 정확합니다)
+        YearMonth yearMonth = YearMonth.of(year, month);
+        if (day < 1 || day > yearMonth.lengthOfMonth()) {
+            throw new IllegalArgumentException("유효하지 않은 일(day)입니다.");
+        }
+
+        List<AppointmentResponseDto.AppointmentDateResponseDto> responseDtoList =
+                appointmentService.getDateAppointment(family_id, year, month, day);
+
+        return ResponseEntity.ok(responseDtoList);
     }
 
     @GetMapping("/{appointment_id}")

@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -74,8 +75,11 @@ public class AppointmentService {
         LocalDate startOfMonth = yearMonth.atDay(1);
         LocalDate endOfMonth = yearMonth.atEndOfMonth();
 
+        LocalDateTime startOfMonthWithTime = startOfMonth.atStartOfDay(); // 00:00:00
+        LocalDateTime endOfMonthWithTime = endOfMonth.atTime(23, 59, 59); // 23:59:59
+
         // 2. Repository를 통해 해당 기간의 약속 데이터를 조회
-        List<Appointment> appointments = appointmentRepository.findAppointmentsOverlappingWithDateRange(familyId, startOfMonth, endOfMonth);
+        List<Appointment> appointments = appointmentRepository.findAppointmentsOverlappingWithDateRange(familyId, startOfMonthWithTime, endOfMonthWithTime);
 
         // 3. flatMap을 사용하여 각 약속의 기간에 포함되는 모든 날짜를 추출
         List<String> daysWithAppointments = appointments.stream()
@@ -92,6 +96,31 @@ public class AppointmentService {
 
         // 4. 결과를 DTO에 담아 반환
         return new AppointmentResponseDto.AppointmentMonthResponseDto(daysWithAppointments);
+    }
+
+    public List<AppointmentResponseDto.AppointmentDateResponseDto> getDateAppointment(Long familyId, int year, int month, int day) {
+        // 1. 요청된 날짜의 시작 시간과 종료 시간을 LocalDateTime으로 정의합니다.
+        LocalDate targetDate = LocalDate.of(year, month, day);
+        LocalDateTime startOfDay = targetDate.atStartOfDay(); // 예: 2025-09-04T00:00:00
+        LocalDateTime endOfDay = targetDate.atTime(23, 59, 59);   // 예: 2025-09-04T23:59:59
+
+        // 2. 기존 Repository 메서드를 재사용하여 해당 날짜와 겹치는 모든 약속을 조회합니다.
+        List<Appointment> appointmentsOnDate = appointmentRepository.findAppointmentsOverlappingWithDateRange(familyId, startOfDay, endOfDay);
+
+        // 3. 조회된 Appointment 엔터티 리스트를 AppointmentDateResponseDto 리스트로 변환합니다.
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"); // 시간만 표시할 포맷터
+
+        return appointmentsOnDate.stream()
+                .map(appointment -> new AppointmentResponseDto.AppointmentDateResponseDto(
+                        appointment.getId(),
+                        appointment.getName(),
+                        appointment.getStartTime().format(formatter), // "HH:mm" 형식으로 시간 변환
+                        appointment.getEndTime().format(formatter),   // "HH:mm" 형식으로 시간 변환
+                        appointment.getLocation(),
+                        appointment.getProposeUser().getNickname(),
+                        (long) appointment.getParticipants().size()-1 // 참여자 수 계산
+                ))
+                .collect(Collectors.toList());
     }
 
     public AppointmentResponseDto.AppointmentDetailResponseDto getAppointment(Long appointmentId) {

@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface AppointmentRepository extends JpaRepository<Appointment, Long> {
@@ -19,7 +20,7 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
             "AND a.endTime >= :startOfMonth")
     List<Appointment> findAppointmentsOverlappingWithDateRange(
             @Param("familyId") Long familyId,
-            @Param("startOfMonth") LocalDate startOfMonth,
-            @Param("endOfMonth") LocalDate endOfMonth);
+            @Param("startOfMonth") LocalDateTime startOfMonth,
+            @Param("endOfMonth") LocalDateTime endOfMonth);
 
 }
