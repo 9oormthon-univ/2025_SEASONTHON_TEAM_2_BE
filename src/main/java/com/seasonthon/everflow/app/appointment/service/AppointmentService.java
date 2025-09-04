@@ -27,7 +27,7 @@ public class AppointmentService {
 
     private final AppointmentRepository appointmentRepository;
     private final AppointmentParticipantRepository appointmentParticipantRepository;
-    private final UserRepository userRepository; // User 정보를 가져오기 위해 필요
+    private final UserRepository userRepository;
 
     @Transactional
     public AppointmentResponseDto.AppointmentAddResponseDto addAppointment(AppointmentRequestDto.AppointmentAddRequestDto requestDto, Long proposeUserId) {
@@ -57,7 +57,7 @@ public class AppointmentService {
                 .map(participantUser -> AppointmentParticipant.builder()
                         .appointment(appointment)
                         .user(participantUser)
-                        .acceptStatus(AcceptStatus.PENDING) // 초기 상태는 PENDING
+                        .acceptStatus(AcceptStatus.PENDING)
                         .build())
                 .collect(Collectors.toList());
 
@@ -110,17 +110,17 @@ public class AppointmentService {
         List<Appointment> appointmentsOnDate = appointmentRepository.findAppointmentsOverlappingWithDateRange(familyId, startOfDay, endOfDay);
 
         // 3. 조회된 Appointment 엔터티 리스트를 AppointmentDateResponseDto 리스트로 변환합니다.
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"); // 시간만 표시할 포맷터
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
         return appointmentsOnDate.stream()
                 .map(appointment -> new AppointmentResponseDto.AppointmentDateResponseDto(
                         appointment.getId(),
                         appointment.getName(),
-                        appointment.getStartTime().format(formatter), // "HH:mm" 형식으로 시간 변환
-                        appointment.getEndTime().format(formatter),   // "HH:mm" 형식으로 시간 변환
+                        appointment.getStartTime().format(formatter),
+                        appointment.getEndTime().format(formatter),
                         appointment.getLocation(),
                         appointment.getProposeUser().getNickname(),
-                        (long) appointment.getParticipants().size()-1 // 참여자 수 계산
+                        (long) appointment.getParticipants().size()-1
                 ))
                 .collect(Collectors.toList());
     }
@@ -166,9 +166,6 @@ public class AppointmentService {
 
         // 2. 엔터티의 상태 업데이트 메서드를 호출합니다.
         participant.updateStatus(newStatus);
-
-        // 3. @Transactional에 의해 메서드가 종료될 때 변경된 내용이 자동으로 DB에 반영됩니다 (Dirty Checking).
-        //    따로 save()를 호출할 필요가 없습니다.
 
         return new AppointmentResponseDto.MessageResponseDto("참여 상태가 성공적으로 변경되었습니다.");
     }
