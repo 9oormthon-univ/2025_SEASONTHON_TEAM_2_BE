@@ -24,11 +24,11 @@ public class AppointmentRequestDto {
 
     @NotNull(message = "시작 날짜는 필수입니다.")
     @FutureOrPresent(message = "시작 날짜는 현재이거나 미래여야 합니다.")
-    private LocalDate startTime;
+    private LocalDateTime startTime;
 
     @NotNull(message = "종료 날짜는 필수입니다.")
     @FutureOrPresent(message = "종료 날짜는 현재이거나 미래여야 합니다.")
-    private LocalDate endTime;
+    private LocalDateTime endTime;
 
     private AppointmentColor color;
 

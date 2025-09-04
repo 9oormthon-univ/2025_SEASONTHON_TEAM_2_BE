@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.YearMonth;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -79,8 +80,8 @@ public class AppointmentService {
         // 3. flatMap을 사용하여 각 약속의 기간에 포함되는 모든 날짜를 추출
         List<String> daysWithAppointments = appointments.stream()
                 .flatMap(appointment -> {
-                    LocalDate startDate = appointment.getStartTime();
-                    LocalDate endDate = appointment.getEndTime();
+                    LocalDate startDate = appointment.getStartTime().toLocalDate();
+                    LocalDate endDate = appointment.getEndTime().toLocalDate();
 
                     return startDate.datesUntil(endDate.plusDays(1));
                 })
@@ -92,4 +93,25 @@ public class AppointmentService {
         // 4. 결과를 DTO에 담아 반환
         return new AppointmentResponseDto.AppointmentMonthResponseDto(daysWithAppointments);
     }
+
+    public AppointmentResponseDto.AppointmentDetailResponseDto getAppointment(Long appointmentId) {
+        // 1. appointmentId를 사용하여 DB에서 약속 엔터티를 조회합니다.
+        Appointment appointment = appointmentRepository.findById(appointmentId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 약속을 찾을 수 없습니다. id=" + appointmentId));
+
+        // 2. 날짜/시간(LocalDateTime)을 원하는 형식의 문자열(String)으로 변환하기 위한 포맷터를 정의합니다.
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+
+        // 3. 조회된 엔터티의 정보를 사용하여 DTO를 생성하고 반환합니다.
+        return new AppointmentResponseDto.AppointmentDetailResponseDto(
+                appointment.getId(),
+                appointment.getName(),
+                appointment.getStartTime().format(formatter),
+                appointment.getEndTime().format(formatter),
+                appointment.getLocation(),
+                appointment.getContent(),
+                appointment.getProposeUser().getNickname()
+        );
+    }
+
 }

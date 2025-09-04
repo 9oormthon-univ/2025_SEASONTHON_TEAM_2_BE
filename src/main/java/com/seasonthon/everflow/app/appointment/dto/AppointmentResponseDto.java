@@ -19,4 +19,17 @@ public class AppointmentResponseDto{
     public static class AppointmentMonthResponseDto {
         private List<String> dates;
     }
+
+    @Getter
+    @AllArgsConstructor
+    public static class AppointmentDetailResponseDto {
+        private Long appointmentId;
+        private String appointmentName;
+        private String startTime;
+        private String endTime;
+        private String location;
+        private String content;
+        private String proposeUserName;
+
+    }
 }
