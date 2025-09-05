@@ -17,6 +17,7 @@ public enum ErrorStatus implements BaseErrorCode {
     FILE_IS_EMPTY(HttpStatus.BAD_REQUEST, "FILE4006", "업로드할 파일이 없습니다."),
     POST_NOT_ACTIVE(HttpStatus.BAD_REQUEST, "POST4007", "활성화되지 않은 게시글입니다."),
     INTEREST_LENGTH_EXCEEDED(HttpStatus.BAD_REQUEST, "PROFILE40011", "각 관심사는 15자 이내로 입력해주세요."),
+    FAMILY_JOIN_FAILED(HttpStatus.BAD_REQUEST, "FAMILY40012", "가족 가입에 3회 이상 실패했습니다."),
 
     POST_SCHEDULE_REQUIRED(HttpStatus.BAD_REQUEST, "POST40012", "게시글 발행을 위해 일정 정보가 필요합니다."),
     POST_REQUIREMENT_REQUIRED(HttpStatus.BAD_REQUEST, "POST40013", "게시글 발행을 위해 참여 조건이 필요합니다."),
@@ -26,6 +27,7 @@ public enum ErrorStatus implements BaseErrorCode {
     POST_NOT_DRAFT(HttpStatus.BAD_REQUEST, "POST40017", "임시저장 상태가 아닌 게시글입니다."),
     INVALID_IMAGE_FORMAT(HttpStatus.BAD_REQUEST, "FILE40018", "지원하지 않는 이미지 형식입니다. (jpg, png만 지원)"),
     IMAGE_SIZE_EXCEEDED(HttpStatus.BAD_REQUEST, "FILE40019", "이미지 크기가 너무 큽니다. (최대 5MB)"),
+    INVALID_VERIFICATION_ANSWER(HttpStatus.BAD_REQUEST, "VERIFICATION40020", "가족 검증 질문 또는 답변이 틀렸습니다."),
     // == 파라미터 관련 에러 ==
     INVALID_MONTH_PARAMETER(HttpStatus.BAD_REQUEST, "PARAMETER4001", "월(month)은 1에서 12 사이의 값이어야 합니다."),
     INVALID_DAY_PARAMETER(HttpStatus.BAD_REQUEST, "PARAMETER4002", "유효하지 않은 일(day)입니다."),
@@ -58,11 +60,11 @@ public enum ErrorStatus implements BaseErrorCode {
     POST_FEEDBACK_NOT_FOUND(HttpStatus.NOT_FOUND, "POST_FEEDBACK40411", "게시글 피드백 설정을 찾을 수 없습니다."),
     POST_CONTENT_NOT_FOUND(HttpStatus.NOT_FOUND, "POST_CONTENT40412", "게시글 콘텐츠 정보를 찾을 수 없습니다."),
     MESSAGE_ROOM_NOT_FOUND(HttpStatus.NOT_FOUND, "MESSAGE40413", "채팅방을 찾을 수 없습니다."),
-    PARTICIPANT_REWARD_NOT_FOUND(HttpStatus.NOT_FOUND, "PARTICIPANT_REWARD40414", "참여자 리워드 정보를 찾을 수 없습니다."),
+    FAMILY_NOT_FOUND(HttpStatus.NOT_FOUND, "PARTICIPANT_REWARD40414", "가족 정보를 찾을 수 없습니다."),
+    NOT_IN_FAMILY_YET(HttpStatus.NOT_FOUND, "PARTICIPANT_REWARD40415", "소속된 가족 정보를 찾을 수 없습니다."),
     // == Appointment 관련 에러 ==
     APPOINTMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "APPOINTMENT4041", "해당 약속을 찾을 수 없습니다."),
     PARTICIPANT_NOT_FOUND(HttpStatus.NOT_FOUND, "PARTICIPANT4041", "해당 약속의 참여자가 아닙니다."),
-
 
     // 405 Method Not Allowed
     METHOD_NOT_ALLOWED(HttpStatus.METHOD_NOT_ALLOWED, "COMMON405", "허용되지 않는 HTTP 메서드입니다."),
@@ -79,6 +81,7 @@ public enum ErrorStatus implements BaseErrorCode {
     ALREADY_PAID(HttpStatus.CONFLICT, "PARTICIPANT4098", "이미 리워드가 지급된 참여자입니다."),
     USER_ALREADY_WITHDRAWN(HttpStatus.CONFLICT, "USER4099", "이미 탈퇴된 계정입니다."),
     DUPLICATE_NICKNAME(HttpStatus.CONFLICT, "USER40910", "이미 사용 중인 닉네임입니다."),
+    FAMILY_ALREADY_EXISTS(HttpStatus.CONFLICT, "USER40911", "이미 가입된 가족이 존재합니다."),
 
     // 415 UNSUPPORTED_MEDIA_TYPE, 422 UNPROCESSABLE_ENTITY
     UNSUPPORTED_MEDIA_TYPE(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "COMMON415", "지원하지 않는 미디어 타입입니다."),

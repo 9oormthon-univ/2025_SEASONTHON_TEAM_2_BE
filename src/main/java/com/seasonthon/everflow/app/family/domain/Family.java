@@ -1,10 +1,12 @@
-package com.seasonthon.everflow.app.user.domain;
+package com.seasonthon.everflow.app.family.domain;
 
+import com.seasonthon.everflow.app.user.domain.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,6 +22,7 @@ public class Family {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Setter
     @Column(name = "family_name")
     private String familyName;
 
@@ -43,7 +46,11 @@ public class Family {
         this.inviteCode = generateInviteCode();
     }
 
-    // 6자리 랜덤 숫자 초대 코드 생성
+    public void addMember(User user) {
+        this.members.add(user);
+        user.setFamily(this);
+    }
+
     private String generateInviteCode() {
         Random random = new Random();
         int code = 100000 + random.nextInt(900000);

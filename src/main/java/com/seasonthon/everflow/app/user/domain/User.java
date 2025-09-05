@@ -1,7 +1,18 @@
 package com.seasonthon.everflow.app.user.domain;
 
-import jakarta.persistence.*;
-
+import com.seasonthon.everflow.app.family.domain.Family;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 import java.util.UUID;
 import lombok.Builder;
@@ -57,12 +68,13 @@ public class User {
 
     @Column(name = "last_login_at")
     private LocalDateTime lastLoginAt;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "family_id")
     private Family family;
 
     @Column(name = "family_join_attempts")
-    private int familyJoinAttempts; // 가족 가입 질문 실패 횟수
+    private Integer familyJoinAttempts;
 
     @Builder
     public User(String oauthId, String email, String nickname, String profileUrl, RoleType roleType, SocialType socialType, LocalDateTime lastLoginAt) {
@@ -94,7 +106,6 @@ public class User {
         this.lastLoginAt = LocalDateTime.now();
     }
 
-    // --- 추가된 메서드 ---
     public void setFamily(Family family) {
         this.family = family;
     }
@@ -105,5 +116,9 @@ public class User {
 
     public void increaseFamilyJoinAttempts() {
         this.familyJoinAttempts++;
+    }
+
+    public void updateNickname(String nickname) {
+        this.nickname = nickname;
     }
 }
