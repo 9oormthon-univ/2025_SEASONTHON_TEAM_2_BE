@@ -1,0 +1,38 @@
+package com.seasonthon.everflow.app.notification.controller;
+
+import com.seasonthon.everflow.app.global.code.dto.ApiResponse;
+import com.seasonthon.everflow.app.global.code.status.SuccessStatus;
+import com.seasonthon.everflow.app.global.oauth.domain.CustomUserDetails;
+import com.seasonthon.everflow.app.notification.dto.NotificationResponseDto;
+import com.seasonthon.everflow.app.notification.service.NotificationService;
+import io.swagger.v3.oas.annotations.Operation;
+import jdk.jfr.Description;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequestMapping("/api/notifications")
+@RequiredArgsConstructor
+public class NotificationController {
+
+    private final NotificationService notificationService;
+
+    @Operation(summary = "알림 읽기", description = "알림상태를 읽기로 전환합니다.")
+    @PatchMapping("/{notificationId}/read")
+    public ResponseEntity<ApiResponse<NotificationResponseDto.ReadResponseDto>> readNotification(
+            @PathVariable Long notificationId,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+
+        Long currentUserId = userDetails.getUserId();
+
+        NotificationResponseDto.ReadResponseDto resultDto =
+                notificationService.readNotification(notificationId, currentUserId);
+
+        return ResponseEntity.ok(ApiResponse.of(SuccessStatus.OK, resultDto));
+    }
+}
