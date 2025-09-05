@@ -68,6 +68,12 @@ public class User {
 
     @Column(name = "last_login_at")
     private LocalDateTime lastLoginAt;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "family_id")
+    private Family family;
+
+    @Column(name = "family_join_attempts")
+    private int familyJoinAttempts; // 가족 가입 질문 실패 횟수
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "family_id")

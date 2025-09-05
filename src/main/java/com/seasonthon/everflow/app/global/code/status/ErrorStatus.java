@@ -28,6 +28,9 @@ public enum ErrorStatus implements BaseErrorCode {
     INVALID_IMAGE_FORMAT(HttpStatus.BAD_REQUEST, "FILE40018", "지원하지 않는 이미지 형식입니다. (jpg, png만 지원)"),
     IMAGE_SIZE_EXCEEDED(HttpStatus.BAD_REQUEST, "FILE40019", "이미지 크기가 너무 큽니다. (최대 5MB)"),
     INVALID_VERIFICATION_ANSWER(HttpStatus.BAD_REQUEST, "VERIFICATION40020", "가족 검증 질문 또는 답변이 틀렸습니다."),
+    // == 파라미터 관련 에러 ==
+    INVALID_MONTH_PARAMETER(HttpStatus.BAD_REQUEST, "PARAMETER4001", "월(month)은 1에서 12 사이의 값이어야 합니다."),
+    INVALID_DAY_PARAMETER(HttpStatus.BAD_REQUEST, "PARAMETER4002", "유효하지 않은 일(day)입니다."),
 
     // 401 Unauthorized
     UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "AUTH401", "인증이 필요합니다."),
@@ -59,6 +62,9 @@ public enum ErrorStatus implements BaseErrorCode {
     MESSAGE_ROOM_NOT_FOUND(HttpStatus.NOT_FOUND, "MESSAGE40413", "채팅방을 찾을 수 없습니다."),
     FAMILY_NOT_FOUND(HttpStatus.NOT_FOUND, "PARTICIPANT_REWARD40414", "가족 정보를 찾을 수 없습니다."),
     NOT_IN_FAMILY_YET(HttpStatus.NOT_FOUND, "PARTICIPANT_REWARD40415", "소속된 가족 정보를 찾을 수 없습니다."),
+    // == Appointment 관련 에러 ==
+    APPOINTMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "APPOINTMENT4041", "해당 약속을 찾을 수 없습니다."),
+    PARTICIPANT_NOT_FOUND(HttpStatus.NOT_FOUND, "PARTICIPANT4041", "해당 약속의 참여자가 아닙니다."),
 
     // 405 Method Not Allowed
     METHOD_NOT_ALLOWED(HttpStatus.METHOD_NOT_ALLOWED, "COMMON405", "허용되지 않는 HTTP 메서드입니다."),
