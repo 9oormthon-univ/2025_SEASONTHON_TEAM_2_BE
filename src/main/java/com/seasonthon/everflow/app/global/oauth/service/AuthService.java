@@ -7,9 +7,13 @@ import com.seasonthon.everflow.app.global.exception.GeneralException;
 import com.seasonthon.everflow.app.global.oauth.domain.CustomUserDetails;
 import com.seasonthon.everflow.app.global.security.JwtService;
 import com.seasonthon.everflow.app.global.security.TokenBlacklistService;
+import com.seasonthon.everflow.app.user.domain.RoleType;
+import com.seasonthon.everflow.app.user.domain.SocialType;
 import com.seasonthon.everflow.app.user.domain.User;
 import com.seasonthon.everflow.app.user.repository.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
+import java.time.LocalDateTime;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -70,5 +74,37 @@ public class AuthService {
                 .orElseThrow(() -> new GeneralException(ErrorStatus.INVALID_TOKEN));
 
         tokenBlacklistService.blacklistToken(accessToken);
+    }
+
+    @Transactional
+    public LoginResponseDto testAppleLogin(String email, String nickname) {
+        if (userRepository.findByEmail(email).isPresent()) {
+            throw new GeneralException(ErrorStatus.DUPLICATE_RESOURCE);
+        }
+
+        String safeNickname = (nickname != null && !nickname.isBlank()) ? nickname.trim() : "AppleUser";
+        if (safeNickname.length() > 5) {
+            throw new GeneralException(ErrorStatus.VALIDATION_FAILED);
+        }
+
+        User user = User.builder()
+                .email(email)
+                .nickname(safeNickname)
+                .profileUrl("https://media.licdn.com/dms/image/v2/C560BAQFmuLSyL1nlPA/company-logo_200_200/company-logo_200_200/0/1678231359043/github_logo?e=1759968000&v=beta&t=nMBlFBz6z5C7V4K8nC6nXKWaxJoSFDbcaFRbewwR2Z4")
+                .oauthId("test-apple-" + UUID.randomUUID())
+                .socialType(SocialType.APPLE)
+                .roleType(RoleType.ROLE_GUEST)
+                .lastLoginAt(LocalDateTime.now())
+                .build();
+
+        userRepository.save(user);
+
+        String roleType = user.getRoleType().toString();
+        String accessToken = jwtService.createAccessToken(user.getEmail(), user.getId(), roleType);
+        String refreshToken = jwtService.createRefreshToken();
+
+        jwtService.updateRefreshToken(user.getEmail(), refreshToken);
+
+        return new LoginResponseDto(accessToken, refreshToken);
     }
 }

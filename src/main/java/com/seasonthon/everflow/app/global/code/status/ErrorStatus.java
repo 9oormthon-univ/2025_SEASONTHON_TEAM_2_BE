@@ -58,6 +58,7 @@ public enum ErrorStatus implements BaseErrorCode {
     POST_CONTENT_NOT_FOUND(HttpStatus.NOT_FOUND, "POST_CONTENT40412", "게시글 콘텐츠 정보를 찾을 수 없습니다."),
     MESSAGE_ROOM_NOT_FOUND(HttpStatus.NOT_FOUND, "MESSAGE40413", "채팅방을 찾을 수 없습니다."),
     FAMILY_NOT_FOUND(HttpStatus.NOT_FOUND, "PARTICIPANT_REWARD40414", "가족 정보를 찾을 수 없습니다."),
+    NOT_IN_FAMILY_YET(HttpStatus.NOT_FOUND, "PARTICIPANT_REWARD40415", "소속된 가족 정보를 찾을 수 없습니다."),
 
     // 405 Method Not Allowed
     METHOD_NOT_ALLOWED(HttpStatus.METHOD_NOT_ALLOWED, "COMMON405", "허용되지 않는 HTTP 메서드입니다."),

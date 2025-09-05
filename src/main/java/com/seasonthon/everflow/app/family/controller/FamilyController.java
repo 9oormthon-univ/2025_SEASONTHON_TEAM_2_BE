@@ -1,6 +1,7 @@
 package com.seasonthon.everflow.app.family.controller;
 
 import com.seasonthon.everflow.app.family.dto.FamilyCreateRequestDto;
+import com.seasonthon.everflow.app.family.dto.FamilyInfoResponseDto;
 import com.seasonthon.everflow.app.family.dto.FamilyJoinAnswerDto;
 import com.seasonthon.everflow.app.family.dto.FamilyJoinRequestDto;
 import com.seasonthon.everflow.app.family.dto.FamilyVerificationResponseDto;
@@ -56,5 +57,16 @@ public class FamilyController {
         }
         familyService.joinFamily(userDetails.getUserId(), request);
         return ApiResponse.onSuccess(null);
+    }
+
+    @Operation(summary = "내 가족 정보 조회", description = "현재 로그인한 사용자의 가족 정보를 조회합니다.")
+    @GetMapping("/my")
+    public ApiResponse<FamilyInfoResponseDto> getMyFamily(
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        if (userDetails == null) {
+            return ApiResponse.onFailure("AUTH401", "인증 정보가 없습니다.", null);
+        }
+        FamilyInfoResponseDto response = familyService.getMyFamily(userDetails.getUserId());
+        return ApiResponse.onSuccess(response);
     }
 }

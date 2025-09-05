@@ -2,6 +2,7 @@ package com.seasonthon.everflow.app.family.service;
 
 import com.seasonthon.everflow.app.family.domain.Family;
 import com.seasonthon.everflow.app.family.dto.FamilyCreateRequestDto;
+import com.seasonthon.everflow.app.family.dto.FamilyInfoResponseDto;
 import com.seasonthon.everflow.app.family.dto.FamilyJoinAnswerDto;
 import com.seasonthon.everflow.app.family.dto.FamilyJoinRequestDto;
 import com.seasonthon.everflow.app.family.dto.FamilyVerificationResponseDto;
@@ -92,5 +93,23 @@ public class FamilyService {
         user.resetFamilyJoinAttempts();
 
         familyRepository.save(family);
+    }
+
+    @Transactional(readOnly = true)
+    public FamilyInfoResponseDto getMyFamily(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new GeneralException(ErrorStatus.USER_NOT_FOUND));
+
+        Family family = user.getFamily();
+        if (family == null) {
+            throw new GeneralException(ErrorStatus.NOT_IN_FAMILY_YET);
+        }
+
+        return new FamilyInfoResponseDto(
+                family.getInviteCode(),
+                family.getFamilyName(),
+                family.getVerificationQuestion(),
+                family.getVerificationAnswer()
+        );
     }
 }
