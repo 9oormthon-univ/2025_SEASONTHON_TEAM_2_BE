@@ -41,10 +41,6 @@ public class AppointmentController {
             @RequestParam int year,
             @RequestParam int month) {
 
-        if (month < 1 || month > 12) {
-            throw new IllegalArgumentException("월(month)은 1에서 12 사이의 값이어야 합니다.");
-        }
-
         AppointmentResponseDto.AppointmentMonthResponseDto responseDto =
                 appointmentService.getMonthAppointment(familyId, year, month);
 
@@ -57,16 +53,6 @@ public class AppointmentController {
             @RequestParam int year,
             @RequestParam int month,
             @RequestParam int day) {
-
-        if (month < 1 || month > 12) {
-            throw new IllegalArgumentException("월(month)은 1에서 12 사이의 값이어야 합니다.");
-        }
-
-        // 간단한 날짜 유효성 검사
-        YearMonth yearMonth = YearMonth.of(year, month);
-        if (day < 1 || day > yearMonth.lengthOfMonth()) {
-            throw new IllegalArgumentException("유효하지 않은 일(day)입니다.");
-        }
 
         List<AppointmentResponseDto.AppointmentDateResponseDto> responseDtoList =
                 appointmentService.getDateAppointment(familyId, year, month, day);

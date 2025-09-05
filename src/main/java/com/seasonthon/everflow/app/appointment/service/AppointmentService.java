@@ -7,8 +7,10 @@ import com.seasonthon.everflow.app.appointment.dto.AppointmentRequestDto;
 import com.seasonthon.everflow.app.appointment.dto.AppointmentResponseDto;
 import com.seasonthon.everflow.app.appointment.repository.AppointmentParticipantRepository;
 import com.seasonthon.everflow.app.appointment.repository.AppointmentRepository;
+import com.seasonthon.everflow.app.global.code.status.ErrorStatus;
 import com.seasonthon.everflow.app.user.domain.User;
 import com.seasonthon.everflow.app.user.repository.UserRepository;
+import com.seasonthon.everflow.app.global.exception.GeneralException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,7 +35,7 @@ public class AppointmentService {
     public AppointmentResponseDto.AppointmentAddResponseDto addAppointment(AppointmentRequestDto.AppointmentAddRequestDto requestDto, Long proposeUserId) {
         // 1. 약속을 제안한 사용자(proposeUser) 정보를 DB에서 조회
         User proposeUser = userRepository.findById(proposeUserId)
-                .orElseThrow(() -> new IllegalArgumentException("제안자를 찾을 수 없습니다."));
+                .orElseThrow(() -> new GeneralException(ErrorStatus.USER_NOT_FOUND));
 
         // 2. Appointment 엔터티 생성
         Appointment appointment = Appointment.builder()
@@ -50,7 +52,7 @@ public class AppointmentService {
         // 3. 참여자(participant) 정보 생성
         List<User> participants = userRepository.findAllById(requestDto.getParticipantUserIds());
         if (participants.size() != requestDto.getParticipantUserIds().size()) {
-            throw new IllegalArgumentException("참여자를 찾을 수 없습니다.");
+            throw new GeneralException(ErrorStatus.USER_NOT_FOUND);
         }
 
         List<AppointmentParticipant> appointmentParticipants = participants.stream()
@@ -72,6 +74,11 @@ public class AppointmentService {
     }
 
     public AppointmentResponseDto.AppointmentMonthResponseDto getMonthAppointment(Long familyId, int year, int month) {
+
+        if (month < 1 || month > 12) {
+            throw new GeneralException(ErrorStatus.INVALID_MONTH_PARAMETER);
+        }
+
         // 1. 조회할 월의 시작일과 종료일 계산
         YearMonth yearMonth = YearMonth.of(year, month);
         LocalDate startOfMonth = yearMonth.atDay(1);
@@ -101,6 +108,14 @@ public class AppointmentService {
     }
 
     public List<AppointmentResponseDto.AppointmentDateResponseDto> getDateAppointment(Long familyId, int year, int month, int day) {
+        if (month < 1 || month > 12) {
+            throw new GeneralException(ErrorStatus.INVALID_MONTH_PARAMETER);
+        }
+        YearMonth yearMonth = YearMonth.of(year, month);
+        if (day < 1 || day > yearMonth.lengthOfMonth()) {
+            throw new GeneralException(ErrorStatus.INVALID_DAY_PARAMETER);
+        }
+
         // 1. 요청된 날짜의 시작 시간과 종료 시간을 LocalDateTime으로 정의합니다.
         LocalDate targetDate = LocalDate.of(year, month, day);
         LocalDateTime startOfDay = targetDate.atStartOfDay(); // 예: 2025-09-04T00:00:00
@@ -128,7 +143,7 @@ public class AppointmentService {
     public AppointmentResponseDto.AppointmentDetailResponseDto getAppointment(Long appointmentId) {
         // 1. appointmentId를 사용하여 DB에서 약속 엔터티를 조회합니다.
         Appointment appointment = appointmentRepository.findById(appointmentId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 약속을 찾을 수 없습니다. id=" + appointmentId));
+                .orElseThrow(() -> new GeneralException(ErrorStatus.APPOINTMENT_NOT_FOUND));
 
         // 2. 날짜/시간(LocalDateTime)을 원하는 형식의 문자열(String)으로 변환하기 위한 포맷터를 정의합니다.
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
@@ -148,25 +163,21 @@ public class AppointmentService {
     @Transactional
     public AppointmentResponseDto.MessageResponseDto deleteAppointment(Long appointmentId) {
         // 1. 삭제하려는 약속이 실제로 존재하는지 확인합니다. (존재하지 않으면 예외 발생)
-        if (!appointmentRepository.existsById(appointmentId)) {
-            throw new IllegalArgumentException("해당 약속을 찾을 수 없습니다. id=" + appointmentId);
-        }
+        Appointment appointment = appointmentRepository.findById(appointmentId)
+                .orElseThrow(() -> new GeneralException(ErrorStatus.APPOINTMENT_NOT_FOUND));
 
-        // 2. JpaRepository가 기본으로 제공하는 deleteById 메서드를 사용하여 약속을 삭제합니다.
-        appointmentRepository.deleteById(appointmentId);
+        // 2. JpaRepository가 기본으로 제공하는 delete 메서드를 사용하여 약속을 삭제합니다.
+        appointmentRepository.delete(appointment);
 
         return new AppointmentResponseDto.MessageResponseDto("약속을 삭제하셨습니다.");
     }
 
     @Transactional // 데이터를 변경하므로 readOnly가 아닌 @Transactional을 사용합니다.
     public AppointmentResponseDto.MessageResponseDto updateParticipantStatus(Long appointmentId, Long userId, AcceptStatus newStatus) {
-        // 1. appointmentId와 userId로 변경해야 할 AppointmentParticipant 레코드를 찾습니다.
         AppointmentParticipant participant = appointmentParticipantRepository.findByAppointmentIdAndUserId(appointmentId, userId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 약속의 참여자가 아닙니다."));
+                .orElseThrow(() -> new GeneralException(ErrorStatus.PARTICIPANT_NOT_FOUND));
 
-        // 2. 엔터티의 상태 업데이트 메서드를 호출합니다.
         participant.updateStatus(newStatus);
-
         return new AppointmentResponseDto.MessageResponseDto("참여 상태가 성공적으로 변경되었습니다.");
     }
 
