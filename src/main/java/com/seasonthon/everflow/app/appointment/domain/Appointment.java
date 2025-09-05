@@ -1,6 +1,9 @@
 package com.seasonthon.everflow.app.appointment.domain;
 
-import com.seasonthon.everflow.app.user.domain.Family;
+<<<<<<< HEAD
+=======
+import com.seasonthon.everflow.app.family.domain.Family;
+>>>>>>> main
 import com.seasonthon.everflow.app.user.domain.User;
 import lombok.Builder;
 import lombok.Getter;
@@ -11,7 +14,10 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import jakarta.persistence.*;
 
+<<<<<<< HEAD
 import java.time.LocalDate;
+=======
+>>>>>>> main
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -46,10 +52,11 @@ public class Appointment {
     private String location;
 
     @Column(name = "start_time", nullable = false)
-    private LocalDate startTime;
+
+    private LocalDateTime startTime;
 
     @Column(name = "end_time", nullable = false)
-    private LocalDate endTime;
+    private LocalDateTime endTime;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "color")
@@ -72,7 +79,11 @@ public class Appointment {
     private LocalDateTime updatedAt;
 
     @Builder
+<<<<<<< HEAD
     public Appointment(User proposeUser, Family family, String name, String content, String location, LocalDate startTime, LocalDate endTime, AppointmentColor color) {
+=======
+    public Appointment(User proposeUser, Family family, String name, String content, String location, LocalDateTime startTime, LocalDateTime endTime, AppointmentColor color) {
+>>>>>>> main
         this.proposeUser = proposeUser;
         this.family = family;
         this.name = name;
@@ -88,7 +99,11 @@ public class Appointment {
         this.status = status;
     }
 
+<<<<<<< HEAD
     public void updateDetails(String name, String content, String location, LocalDate startTime, LocalDate endTime, AppointmentColor color) {
+=======
+    public void updateDetails(String name, String content, String location, LocalDateTime startTime, LocalDateTime endTime, AppointmentColor color) {
+>>>>>>> main
         this.name = name;
         this.content = content;
         this.location = location;

@@ -1,7 +1,18 @@
 package com.seasonthon.everflow.app.user.domain;
 
-import jakarta.persistence.*;
-
+import com.seasonthon.everflow.app.family.domain.Family;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 import java.util.UUID;
 import lombok.Builder;
@@ -62,6 +73,9 @@ public class User {
     @JoinColumn(name = "family_id")
     private Family family;
 
+    @Column(name = "family_join_attempts")
+    private Integer familyJoinAttempts;
+
     @Builder
     public User(String oauthId, String email, String nickname, String profileUrl, RoleType roleType, SocialType socialType, LocalDateTime lastLoginAt) {
         this.oauthId = oauthId;
@@ -73,6 +87,7 @@ public class User {
         this.socialType = socialType;
         this.statusType = StatusType.ACTIVE;
         this.lastLoginAt = lastLoginAt;
+        this.familyJoinAttempts = 0; // 초기 실패 횟수 0
     }
 
     public boolean isWithdrawn() {
@@ -80,9 +95,7 @@ public class User {
     }
 
     public void updateRole(RoleType roleType) {
-        if (roleType != null) {
-            this.roleType = roleType;
-        }
+        if (roleType != null) this.roleType = roleType;
     }
 
     public void updateRefreshToken(String refreshToken) {
@@ -91,5 +104,21 @@ public class User {
 
     public void markLogin() {
         this.lastLoginAt = LocalDateTime.now();
+    }
+
+    public void setFamily(Family family) {
+        this.family = family;
+    }
+
+    public void resetFamilyJoinAttempts() {
+        this.familyJoinAttempts = 0;
+    }
+
+    public void increaseFamilyJoinAttempts() {
+        this.familyJoinAttempts++;
+    }
+
+    public void updateNickname(String nickname) {
+        this.nickname = nickname;
     }
 }
