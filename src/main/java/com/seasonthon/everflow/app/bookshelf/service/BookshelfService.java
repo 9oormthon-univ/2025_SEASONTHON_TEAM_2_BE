@@ -73,8 +73,12 @@ public class BookshelfService {
         }
 
         // 3) 전체 질문을 돌며 없으면 null 답변으로 업서트
+        // 3) 전체 질문을 돌며 없으면 null 답변으로 업서트
         for (BookshelfQuestion q : questions) {
             String ans = payload.getOrDefault(q.getId(), null);
+            if (ans != null && ans.isBlank()) {
+                ans = null; // 빈 문자열은 null로 처리
+            }
 
             BookshelfAnswer a = answerRepository.findByQuestionIdAndUserId(q.getId(), me.getId())
                     .orElseGet(() -> BookshelfAnswer.builder()
@@ -98,16 +102,25 @@ public class BookshelfService {
                 .forEach(a -> answerMap.put(a.getQuestion().getId(), a));
 
         List<BookshelfDto.ShelfItem> items = new ArrayList<>(questions.size());
+        java.time.LocalDateTime lastUpdatedAt = null;
         for (BookshelfQuestion q : questions) {
             BookshelfAnswer a = answerMap.get(q.getId());
+
+            // 최신 시각: updatedAt이 있으면 그걸, 없으면 createdAt을 사용
+            if (a != null) {
+                java.time.LocalDateTime t = (a.getUpdatedAt() != null) ? a.getUpdatedAt() : a.getCreatedAt();
+                if (t != null && (lastUpdatedAt == null || t.isAfter(lastUpdatedAt))) {
+                    lastUpdatedAt = t;
+                }
+            }
+
             items.add(new BookshelfDto.ShelfItem(
                     q.getId(),
                     q.getQuestionText(),
-                    a != null ? a.getAnswer() : null,
-                    a != null ? a.getUpdatedAt() : null
+                    a != null ? a.getAnswer() : null
             ));
         }
 
-        return new BookshelfDto.UserShelfResponse(user.getId(), user.getNickname(), items);
+        return new BookshelfDto.UserShelfResponse(user.getId(), user.getNickname(), lastUpdatedAt, items);
     }
 }

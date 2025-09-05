@@ -11,15 +11,15 @@ public class BookshelfDto {
     public record ShelfItem(
             Long questionId,
             String questionText,
-            String answer,                 // null 허용
-            LocalDateTime updatedAt        // null 가능
+            String answer                // null 허용
     ) {}
 
     // 특정 사용자의 책장 응답
     public record UserShelfResponse(
             Long userId,
             String nickname,
-            List<ShelfItem> items
+            java.time.LocalDateTime lastUpdatedAt, // 책장 전체의 마지막 저장/수정 시각
+            java.util.List<ShelfItem> items
     ) {}
 
     // 내 답변 일괄 저장/수정 요청
