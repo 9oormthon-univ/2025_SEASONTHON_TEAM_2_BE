@@ -1,6 +1,6 @@
 package com.seasonthon.everflow.app.appointment.domain;
 
-import com.seasonthon.everflow.app.user.domain.Family;
+import com.seasonthon.everflow.app.family.domain.Family;
 import com.seasonthon.everflow.app.user.domain.User;
 import lombok.Builder;
 import lombok.Getter;
@@ -11,7 +11,6 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import jakarta.persistence.*;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
