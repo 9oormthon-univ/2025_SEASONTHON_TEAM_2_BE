@@ -4,6 +4,7 @@ import com.seasonthon.everflow.app.family.dto.FamilyCreateRequestDto;
 import com.seasonthon.everflow.app.family.dto.FamilyInfoResponseDto;
 import com.seasonthon.everflow.app.family.dto.FamilyJoinAnswerDto;
 import com.seasonthon.everflow.app.family.dto.FamilyJoinRequestDto;
+import com.seasonthon.everflow.app.family.dto.FamilyMembersResponseDto;
 import com.seasonthon.everflow.app.family.dto.FamilyVerificationResponseDto;
 import com.seasonthon.everflow.app.family.service.FamilyService;
 import com.seasonthon.everflow.app.global.code.dto.ApiResponse;
@@ -67,6 +68,17 @@ public class FamilyController {
             return ApiResponse.onFailure("AUTH401", "인증 정보가 없습니다.", null);
         }
         FamilyInfoResponseDto response = familyService.getMyFamily(userDetails.getUserId());
+        return ApiResponse.onSuccess(response);
+    }
+
+    @Operation(summary = "내 가족 구성원 정보 조회", description = "현재 로그인한 사용자의 가족 구성원 정보를 조회합니다.")
+    @GetMapping("/my/members")
+    public ApiResponse<FamilyMembersResponseDto> getFamilyMembers(
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        if (userDetails == null) {
+            return ApiResponse.onFailure("AUTH401", "인증 정보가 없습니다.", null);
+        }
+        FamilyMembersResponseDto response = familyService.getFamilyMembers(userDetails.getUserId());
         return ApiResponse.onSuccess(response);
     }
 }

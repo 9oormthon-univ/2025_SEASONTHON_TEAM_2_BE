@@ -5,6 +5,7 @@ import com.seasonthon.everflow.app.family.dto.FamilyCreateRequestDto;
 import com.seasonthon.everflow.app.family.dto.FamilyInfoResponseDto;
 import com.seasonthon.everflow.app.family.dto.FamilyJoinAnswerDto;
 import com.seasonthon.everflow.app.family.dto.FamilyJoinRequestDto;
+import com.seasonthon.everflow.app.family.dto.FamilyMembersResponseDto;
 import com.seasonthon.everflow.app.family.dto.FamilyVerificationResponseDto;
 import com.seasonthon.everflow.app.family.repository.FamilyRepository;
 import com.seasonthon.everflow.app.global.code.status.ErrorStatus;
@@ -12,6 +13,8 @@ import com.seasonthon.everflow.app.global.exception.GeneralException;
 import com.seasonthon.everflow.app.user.domain.RoleType;
 import com.seasonthon.everflow.app.user.domain.User;
 import com.seasonthon.everflow.app.user.repository.UserRepository;
+import java.util.Comparator;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -111,5 +114,26 @@ public class FamilyService {
                 family.getVerificationQuestion(),
                 family.getVerificationAnswer()
         );
+    }
+
+    @Transactional(readOnly = true)
+    public FamilyMembersResponseDto getFamilyMembers(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new GeneralException(ErrorStatus.USER_NOT_FOUND));
+
+        Family family = user.getFamily();
+        if (family == null) {
+            throw new GeneralException(ErrorStatus.FAMILY_NOT_FOUND);
+        }
+
+        List<FamilyMembersResponseDto.MemberInfo> memberInfos = family.getMembers().stream()
+                .sorted(Comparator.comparing(User::getCreatedAt, Comparator.nullsLast(Comparator.naturalOrder())))
+                .map(member -> new FamilyMembersResponseDto.MemberInfo(
+                        member.getNickname(),
+                        member.getProfileUrl()
+                ))
+                .toList();
+
+        return new FamilyMembersResponseDto(family.getFamilyName(), memberInfos);
     }
 }

@@ -45,10 +45,17 @@ public class AuthController {
         return ApiResponse.onSuccess(null);
     }
 
-    @Operation(summary = "테스트 로그인", description = "임의의 이메일을 기반으로 SocialType.APPLE 타입의 Mock 유저를 생성하고 토큰을 발급합니다. (테스트용)")
+    @Operation(summary = "테스트 계정생성", description = "입력한 임의의 이메일을 기반으로 SocialType.APPLE 타입의 Mock 유저를 생성하고 토큰을 발급합니다. 토큰을 잘 기억해두세요. (테스트용)")
     @PostMapping("/test/mock-login")
     public ApiResponse<LoginResponseDto> testAppleLogin(@RequestBody TestLoginRequestDto requestDto) {
         LoginResponseDto tokens = authService.testAppleLogin(requestDto.getEmail(), requestDto.getNickname());
+        return ApiResponse.onSuccess(tokens);
+    }
+
+    @Operation(summary = "토큰 재발급", description = "리프레시 토큰을 사용하여 새로운 액세스 토큰을 발급합니다.")
+    @PostMapping("/reissue")
+    public ApiResponse<LoginResponseDto> reissue(@RequestHeader("refresh_token") String refreshToken) {
+        LoginResponseDto tokens = authService.reissue(refreshToken);
         return ApiResponse.onSuccess(tokens);
     }
 }
