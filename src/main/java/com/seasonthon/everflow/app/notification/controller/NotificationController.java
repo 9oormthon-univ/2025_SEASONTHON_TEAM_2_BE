@@ -10,10 +10,9 @@ import jdk.jfr.Description;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/notifications")
@@ -47,5 +46,29 @@ public class NotificationController {
                 notificationService.readALLNotification(currentUserId);
 
         return ResponseEntity.ok(ApiResponse.of(SuccessStatus.OK, resultDto));
+    }
+
+    @Operation(summary = "내 모든 알림 조회", description = "읽지 않은 모든 알림을 조회합니다.")
+    @GetMapping
+    public ResponseEntity<ApiResponse<List<NotificationResponseDto.NotificationGetResponseDto>>> getNotifications(
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+
+        Long currentUserId = userDetails.getUserId();
+        List<NotificationResponseDto.NotificationGetResponseDto> resultDtoList =
+                notificationService.getNotifications(currentUserId);
+
+        return ResponseEntity.ok(ApiResponse.of(SuccessStatus.OK, resultDtoList));
+    }
+
+    @Operation(summary = "내 최근 알림 3개 조회", description = "읽지 않은 최근 알림 3개를 조회합니다.")
+    @GetMapping("/recent")
+    public ResponseEntity<ApiResponse<List<NotificationResponseDto.NotificationGetResponseDto>>> getRecentNotifications(
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+
+        Long currentUserId = userDetails.getUserId();
+        List<NotificationResponseDto.NotificationGetResponseDto> resultDtoList =
+                notificationService.getRecentNotifications(currentUserId);
+
+        return ResponseEntity.ok(ApiResponse.of(SuccessStatus.OK, resultDtoList));
     }
 }

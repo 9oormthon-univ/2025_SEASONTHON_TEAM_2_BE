@@ -11,6 +11,9 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 
 public interface NotificationRepository extends JpaRepository<Notification, Long> {
+    List<Notification> findAllByUserIdAndReadStatusOrderByCreatedAtDesc(Long userId, ReadStatus readStatus);
+    List<Notification> findTop3ByUserIdAndReadStatusOrderByCreatedAtDesc(Long userId, ReadStatus readStatus);
+
     @Modifying
     @Query("UPDATE Notification n SET n.readStatus = :status " +
             "WHERE n.user.id = :userId AND n.readStatus = 'UNREAD' " +

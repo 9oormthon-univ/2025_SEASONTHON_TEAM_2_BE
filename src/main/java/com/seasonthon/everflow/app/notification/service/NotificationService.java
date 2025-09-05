@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -53,5 +54,42 @@ public class NotificationService {
         );
 
         return new NotificationResponseDto.ReadResponseDto("모든 알림을 읽음 처리했습니다.");
+    }
+
+    public List<NotificationResponseDto.NotificationGetResponseDto> getNotifications(Long userId) {
+        // 새로 추가한 메서드를 사용하여 UNREAD 상태의 알림만 조회
+        List<Notification> notifications = notificationRepository.findAllByUserIdAndReadStatusOrderByCreatedAtDesc(userId, ReadStatus.UNREAD);
+
+        return notifications.stream()
+                .map(this::mapToNotificationGetResponseDto)
+                .collect(Collectors.toList());
+    }
+
+    public List<NotificationResponseDto.NotificationGetResponseDto> getRecentNotifications(Long userId) {
+        List<Notification> notifications = notificationRepository.findTop3ByUserIdAndReadStatusOrderByCreatedAtDesc(userId, ReadStatus.UNREAD);
+
+        return notifications.stream()
+                .map(this::mapToNotificationGetResponseDto)
+                .collect(Collectors.toList());
+    }
+
+    private NotificationResponseDto.NotificationGetResponseDto mapToNotificationGetResponseDto(Notification notification) {
+        String typeString = convertNotificationTypeToString(notification.getNotificationType());
+
+        return new NotificationResponseDto.NotificationGetResponseDto(
+                notification.getId(),
+                typeString,
+                notification.getContentText(),
+                notification.getLink()
+        );
+    }
+
+    private String convertNotificationTypeToString(NotificationType type) {
+        return switch (type) {
+            case APPOINTMENT_ACTION, APPOINTMENT_RESPONSE -> "약속알림";
+            case FAMILY_ACTION, FAMILY_RESPONSE -> "구성원알림";
+            case ANSWER_RESPONSE -> "오늘의 질문 알림";
+            default -> "기타알림";
+        };
     }
 }
