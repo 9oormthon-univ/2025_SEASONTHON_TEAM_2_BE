@@ -59,20 +59,33 @@ public class BookshelfService {
         User me = userRepository.findById(meId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.USER_NOT_FOUND));
 
+        // 유효성 체크: 요청 바디/항목 없음
+        if (req == null || req.items() == null) {
+            throw new GeneralException(ErrorStatus.BOOKSHELF_INVALID_PARAMETER);
+        }
+
         // 1) 활성화된 기본 질문 전체(15개) 로드
         List<BookshelfQuestion> questions = questionRepository.findAllByIsActiveTrueOrderByIdAsc();
         Map<Long, BookshelfQuestion> qmap = new HashMap<>();
         for (BookshelfQuestion q : questions) qmap.put(q.getId(), q);
 
-        // 2) 클라이언트가 보낸 값 맵으로
-        Map<Long, String> payload = new HashMap<>();
-        if (req != null && req.items() != null) {
-            for (BookshelfDto.WriteAnswersRequest.AnswerPair p : req.items()) {
-                payload.put(p.questionId(), p.answer()); // answer 는 null 허용
+        // 기본 질문이 하나도 없으면 저장 불가
+        if (qmap.isEmpty()) {
+            throw new GeneralException(ErrorStatus.BOOKSHELF_INVALID_PARAMETER);
+        }
+        // 요청에 알 수 없는 questionId가 포함되었는지 검증
+        for (BookshelfDto.WriteAnswersRequest.AnswerPair p : req.items()) {
+            if (!qmap.containsKey(p.questionId())) {
+                throw new GeneralException(ErrorStatus.BOOKSHELF_INVALID_PARAMETER);
             }
         }
 
-        // 3) 전체 질문을 돌며 없으면 null 답변으로 업서트
+        // 2) 클라이언트가 보낸 값 맵으로
+        Map<Long, String> payload = new HashMap<>();
+        for (BookshelfDto.WriteAnswersRequest.AnswerPair p : req.items()) {
+            payload.put(p.questionId(), p.answer()); // answer 는 null 허용
+        }
+
         // 3) 전체 질문을 돌며 없으면 null 답변으로 업서트
         for (BookshelfQuestion q : questions) {
             String ans = payload.getOrDefault(q.getId(), null);

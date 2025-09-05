@@ -76,12 +76,19 @@ public class HomeService {
     }
 
     /**
-     * 가족 요약 목록(나 포함): userId, nickname, shelfColor 만 반환
+     * 가족 책장 목록(나 포함): userId, nickname, shelfColor 만 반환
      */
     @Transactional(readOnly = true)
     public HomeDto.FamilySummaryResponse getFamilySummary(Long userId) {
         Long familyId = authService.getFamilyId(userId);
+        if (familyId == null) {
+            throw new GeneralException(ErrorStatus.BOOKSHELF_FAMILY_NOT_FOUND);
+        }
+
         List<User> members = userRepository.findAllByFamilyId(familyId);
+        if (members == null || members.isEmpty()) {
+            throw new GeneralException(ErrorStatus.BOOKSHELF_MEMBERS_NOT_FOUND);
+        }
 
         List<HomeDto.FamilyMemberSummary> list = members.stream()
                 .map(u -> new HomeDto.FamilyMemberSummary(
