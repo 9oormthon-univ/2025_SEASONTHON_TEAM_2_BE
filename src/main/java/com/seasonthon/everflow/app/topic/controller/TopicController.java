@@ -2,6 +2,7 @@ package com.seasonthon.everflow.app.topic.controller;
 
 import com.seasonthon.everflow.app.global.code.dto.ApiResponse;
 import com.seasonthon.everflow.app.global.oauth.domain.CustomUserDetails;
+import com.seasonthon.everflow.app.global.oauth.service.AuthService;
 import com.seasonthon.everflow.app.topic.dto.TopicDto;
 import com.seasonthon.everflow.app.topic.service.TopicService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -10,7 +11,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-import com.seasonthon.everflow.app.user.repository.UserRepository;
 
 import java.util.List;
 
@@ -20,7 +20,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class TopicController {
 
-    private final UserRepository userRepository;
+    private final AuthService authService;
     private final TopicService topicService;
 
     // 1) 토픽 등록 (관리자)
@@ -48,14 +48,7 @@ public class TopicController {
     public ApiResponse<TopicDto.FamilyAnsweredTopicsResponse> getFamilyAnsweredTopics(
             @AuthenticationPrincipal CustomUserDetails me
     ) {
-        if (me == null) return ApiResponse.onFailure("AUTH401","인증 정보가 없습니다.", null);
-
-        Long userId = me.getUserId();
-        Long familyId = userRepository.findById(userId)
-                .map(u -> u.getFamily() != null ? u.getFamily().getId() : null)
-                .orElse(null);
-        if (familyId == null) return ApiResponse.onFailure("FAMILY404","가족 정보가 없습니다.", null);
-
+        Long familyId = authService.getFamilyId(me);
         return ApiResponse.onSuccess(topicService.getFamilyAnsweredTopics(familyId));
     }
 
@@ -66,14 +59,7 @@ public class TopicController {
             @AuthenticationPrincipal CustomUserDetails me,
             @PathVariable Long topicId
     ) {
-        if (me == null) return ApiResponse.onFailure("AUTH401","인증 정보가 없습니다.", null);
-
-        Long userId = me.getUserId();
-        Long familyId = userRepository.findById(userId)
-                .map(u -> u.getFamily() != null ? u.getFamily().getId() : null)
-                .orElse(null);
-        if (familyId == null) return ApiResponse.onFailure("FAMILY404","가족 정보가 없습니다.", null);
-
+        Long familyId = authService.getFamilyId(me);
         return ApiResponse.onSuccess(topicService.getFamilyAnswersByTopic(topicId, familyId));
     }
 
@@ -92,8 +78,8 @@ public class TopicController {
             @PathVariable Long topicId,
             @RequestBody TopicDto.AnswerCreateRequest req
     ) {
-        if (me == null) return ApiResponse.onFailure("AUTH401","인증 정보가 없습니다.", null);
-        return ApiResponse.onSuccess(topicService.createAnswer(topicId, me.getUserId(), req));
+        Long userId = authService.getUserId(me);
+        return ApiResponse.onSuccess(topicService.createAnswer(topicId, userId, req));
     }
 
     // 6) 토픽 답변 수정 (내 것만)
@@ -104,7 +90,7 @@ public class TopicController {
             @PathVariable Long topicId,
             @RequestBody TopicDto.AnswerUpdateRequest req
     ) {
-        if (me == null) return ApiResponse.onFailure("AUTH401","인증 정보가 없습니다.", null);
-        return ApiResponse.onSuccess(topicService.updateAnswer(topicId, me.getUserId(), req));
+        Long userId = authService.getUserId(me);
+        return ApiResponse.onSuccess(topicService.updateAnswer(topicId, userId, req));
     }
 }

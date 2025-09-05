@@ -17,7 +17,7 @@ public class Topic {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private TopicStatus status;             // DRAFT/ACTIVE/INACTIVE
+    private TopicStatus status;             // DRAFT/ACTIVE/EXPIRED
 
     @Column(name = "active_from", nullable = false)
     private LocalDateTime activeFrom;       // 활성 시작(포함)

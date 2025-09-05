@@ -6,7 +6,7 @@ import com.seasonthon.everflow.app.home.dto.HomeDto;
 import com.seasonthon.everflow.app.home.service.HomeService;
 import com.seasonthon.everflow.app.topic.dto.TopicDto;
 import com.seasonthon.everflow.app.topic.service.TopicService;
-import com.seasonthon.everflow.app.user.repository.UserRepository;
+import com.seasonthon.everflow.app.global.oauth.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -23,20 +23,16 @@ public class HomeController {
 
     private final HomeService homeService;
     private final TopicService topicService;
-    private final UserRepository userRepository;
+    private final AuthService authService;
 
     /** 1) 가족 친밀도(참여율) */
-    @Operation(summary = "가족 친밀도(참여율)", description = "내 누적 답변 수 / 가족 내 최대 답변 수 × 100 (scope: ALL|ACTIVE|LAST_30D)")
+    @Operation(summary = "가족 친밀도(참여율)", description = "내 누적 답변 수 / 가족 내 최대 답변 수 × 100 (최근 30일 기준)")
     @GetMapping("/progress")
     public ApiResponse<HomeDto.ClosenessResponse> getProgress(
             @AuthenticationPrincipal CustomUserDetails me
     ) {
-        if (me == null) return ApiResponse.onFailure("AUTH401","인증 정보가 없습니다.", null);
-        Long userId = me.getUserId();
-        Long familyId = userRepository.findById(userId)
-                .map(u -> u.getFamily() != null ? u.getFamily().getId() : null)
-                .orElse(null);
-        if (familyId == null) return ApiResponse.onFailure("FAMILY404","가족 정보가 없습니다.", null);
+        Long userId = authService.getUserId(me);
+        Long familyId = authService.getFamilyId(me);
         HomeDto.ClosenessResponse dto = homeService.getCloseness(userId, familyId);
         return ApiResponse.onSuccess(dto);
     }
@@ -54,12 +50,7 @@ public class HomeController {
     public ApiResponse<List<TopicDto.AnswerResponse>> getActiveTopicFamilyAnswers(
             @AuthenticationPrincipal CustomUserDetails me
     ) {
-        if (me == null) return ApiResponse.onFailure("AUTH401","인증 정보가 없습니다.", null);
-        Long userId = me.getUserId();
-        Long familyId = userRepository.findById(userId)
-                .map(u -> u.getFamily() != null ? u.getFamily().getId() : null)
-                .orElse(null);
-        if (familyId == null) return ApiResponse.onFailure("FAMILY404","가족 정보가 없습니다.", null);
+        Long familyId = authService.getFamilyId(me);
         return ApiResponse.onSuccess(topicService.getFamilyAnswers(familyId));
     }
 }

@@ -62,6 +62,8 @@ public enum ErrorStatus implements BaseErrorCode {
     MESSAGE_ROOM_NOT_FOUND(HttpStatus.NOT_FOUND, "MESSAGE40413", "채팅방을 찾을 수 없습니다."),
     FAMILY_NOT_FOUND(HttpStatus.NOT_FOUND, "PARTICIPANT_REWARD40414", "가족 정보를 찾을 수 없습니다."),
     NOT_IN_FAMILY_YET(HttpStatus.NOT_FOUND, "PARTICIPANT_REWARD40415", "소속된 가족 정보를 찾을 수 없습니다."),
+    // == Auth 관련 에러 ==
+    AUTH_REQUIRED(HttpStatus.UNAUTHORIZED, "AUTH401", "인증 정보가 필요합니다."),
     // == Appointment 관련 에러 ==
     APPOINTMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "APPOINTMENT4041", "해당 약속을 찾을 수 없습니다."),
     PARTICIPANT_NOT_FOUND(HttpStatus.NOT_FOUND, "PARTICIPANT4041", "해당 약속의 참여자가 아닙니다."),
