@@ -44,6 +44,19 @@ public class HomeController {
         return ApiResponse.onSuccess(topicService.getCurrentActiveTopic());
     }
 
+    /** 2-1) 가족 요약 목록(닉네임 + 책 색 + 유저 ID) */
+    @Operation(
+            summary = "가족 책장 목록",
+            description = "같은 가족 구성원의 userId, 닉네임, 책 색을 조회합니다."
+    )
+    @GetMapping("/bookshelves")
+    public ApiResponse<com.seasonthon.everflow.app.home.dto.HomeDto.FamilySummaryResponse> getFamilySummary(
+            @AuthenticationPrincipal CustomUserDetails me
+    ) {
+        Long meId = authService.getUserId(me);
+        return ApiResponse.onSuccess(homeService.getFamilySummary(meId));
+    }
+
     /** 3) 활성 토픽의 우리 가족 답변 조회(본인 포함) */
     @Operation(summary = "활성 토픽의 우리 가족 답변 조회", description = "로그인 사용자의 가족 기준으로, 활성 토픽에 남긴 모든 답변(본인 포함)을 조회합니다.")
     @GetMapping("/topics/active/answers")
