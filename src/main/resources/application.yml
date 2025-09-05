@@ -1,0 +1,46 @@
+server:
+  port: 8443
+
+cloud:
+  aws:
+    region:
+      static: ${S3_REGION:ap-northeast-2}
+    s3:
+      bucket: ${S3_BUCKETNAME:everflowbucket}
+
+spring:
+  profiles:
+    active: local
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/everbase
+    username: root
+    password: tjdcodnjs
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    database-platform: org.hibernate.dialect.MySQLDialect
+    properties:
+      hibernate:
+        format_sql: true
+    show-sql: true
+
+jwt:
+  secretKey: ${JWT_SECRET_KEY:47baacaf872ee6fb2c55ef59f48e2b3463173ff7f472b77ac4159cfdf4b6a248}
+  access:
+    expiration: ${JWT_ACCESS_EXPIRATION:3600000}
+    header: ${JWT_ACCESS_HEADER:Authorization}
+  refresh:
+    expiration: ${JWT_REFRESH_EXPIRATION:3600000}
+    header: ${JWT_REFRESH_HEADER:RefreshToken}
+
+# Springdoc (Swagger UI)
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    url: /v3/api-docs
+    display-request-duration: true
+    groups-order: ASC
