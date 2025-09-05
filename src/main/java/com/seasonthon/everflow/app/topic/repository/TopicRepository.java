@@ -8,6 +8,8 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 
 public interface TopicRepository extends JpaRepository<Topic, Long> {
+
     Optional<Topic> findFirstByStatusAndActiveFromLessThanEqualAndActiveUntilGreaterThanOrderByActiveFromDesc(
-            TopicStatus status, LocalDateTime nowFrom, LocalDateTime nowUntil);
+            TopicStatus status, LocalDateTime now1, LocalDateTime now2
+    );
 }
