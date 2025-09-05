@@ -50,11 +50,17 @@ public class AuthService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.USER_NOT_FOUND));
 
+        String familyCode = null;
+        if (user.getFamily() != null) {
+            familyCode = user.getFamily().getInviteCode();
+        }
+
         return new UserInfoResponseDto(
                 user.getEmail(),
                 user.getNickname(),
                 user.getProfileUrl(),
-                user.getRoleType().toString()
+                user.getRoleType().toString(),
+                familyCode
         );
     }
 

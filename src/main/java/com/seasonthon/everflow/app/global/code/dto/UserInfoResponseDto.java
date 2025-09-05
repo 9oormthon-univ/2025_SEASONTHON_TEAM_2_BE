@@ -10,4 +10,5 @@ public class UserInfoResponseDto {
     private String nickname;
     private String profileUrl;
     private String role;
+    private String familyCode;
 }
