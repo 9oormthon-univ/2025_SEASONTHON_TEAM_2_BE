@@ -8,7 +8,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-import com.seasonthon.everflow.app.user.domain.User;
 
 import jakarta.validation.Valid;
 import java.net.URI;
@@ -36,9 +35,9 @@ public class AppointmentController {
         return ResponseEntity.created(location).body(responseDto);
     }
 
-    @GetMapping("/family/{family_id}")
+    @GetMapping("/family/{familyId}")
     public ResponseEntity<AppointmentResponseDto.AppointmentMonthResponseDto> getMonthAppointment(
-            @PathVariable Long family_id,
+            @PathVariable Long familyId,
             @RequestParam int year,
             @RequestParam int month) {
 
@@ -47,14 +46,14 @@ public class AppointmentController {
         }
 
         AppointmentResponseDto.AppointmentMonthResponseDto responseDto =
-                appointmentService.getMonthAppointment(family_id, year, month);
+                appointmentService.getMonthAppointment(familyId, year, month);
 
         return ResponseEntity.ok(responseDto);
     }
 
-    @GetMapping("/family/{family_id}/date")
+    @GetMapping("/family/{familyId}/date")
     public ResponseEntity<List<AppointmentResponseDto.AppointmentDateResponseDto>> getDateAppointment(
-            @PathVariable Long family_id,
+            @PathVariable Long familyId,
             @RequestParam int year,
             @RequestParam int month,
             @RequestParam int day) {
@@ -63,30 +62,30 @@ public class AppointmentController {
             throw new IllegalArgumentException("월(month)은 1에서 12 사이의 값이어야 합니다.");
         }
 
-        // 간단한 날짜 유효성 검사 (실제 월의 마지막 날을 확인하는 것이 더 정확합니다)
+        // 간단한 날짜 유효성 검사
         YearMonth yearMonth = YearMonth.of(year, month);
         if (day < 1 || day > yearMonth.lengthOfMonth()) {
             throw new IllegalArgumentException("유효하지 않은 일(day)입니다.");
         }
 
         List<AppointmentResponseDto.AppointmentDateResponseDto> responseDtoList =
-                appointmentService.getDateAppointment(family_id, year, month, day);
+                appointmentService.getDateAppointment(familyId, year, month, day);
 
         return ResponseEntity.ok(responseDtoList);
     }
 
-    @GetMapping("/{appointment_id}")
+    @GetMapping("/{appointmentId}")
     public ResponseEntity<AppointmentResponseDto.AppointmentDetailResponseDto> getAppointment(
-            @PathVariable Long appointment_id ) {
+            @PathVariable Long appointmentId ) {
         AppointmentResponseDto.AppointmentDetailResponseDto responseDto =
-                appointmentService.getAppointment(appointment_id);
+                appointmentService.getAppointment(appointmentId);
 
         return ResponseEntity.ok(responseDto);
     }
 
-    @DeleteMapping("/{appointment_id}")
-    public ResponseEntity<AppointmentResponseDto.MessageResponseDto> deleteAppointment(@PathVariable Long appointment_id) {
-        AppointmentResponseDto.MessageResponseDto responseDto = appointmentService.deleteAppointment(appointment_id);
+    @DeleteMapping("/{appointmentId}")
+    public ResponseEntity<AppointmentResponseDto.MessageResponseDto> deleteAppointment(@PathVariable Long appointmentId) {
+        AppointmentResponseDto.MessageResponseDto responseDto = appointmentService.deleteAppointment(appointmentId);
 
         return ResponseEntity.ok(responseDto);
     }
