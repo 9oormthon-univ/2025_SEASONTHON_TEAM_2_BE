@@ -114,4 +114,5 @@ public class ExceptionAdvice extends ResponseEntityExceptionHandler {
                 .status(ec.getHttpStatus())
                 .body(ApiResponse.of(ec, null));
     }
+
 }

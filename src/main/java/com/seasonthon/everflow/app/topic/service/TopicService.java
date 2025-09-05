@@ -1,5 +1,7 @@
 package com.seasonthon.everflow.app.topic.service;
 
+import com.seasonthon.everflow.app.global.code.status.ErrorStatus;
+import com.seasonthon.everflow.app.global.exception.GeneralException;
 import com.seasonthon.everflow.app.topic.domain.*;
 import com.seasonthon.everflow.app.topic.dto.TopicDto.*;
 import com.seasonthon.everflow.app.topic.repository.TopicAnswerRepository;
@@ -25,80 +27,132 @@ public class TopicService {
     private final TopicAnswerRepository answerRepository;
     private final UserRepository userRepository;
 
-    // 1) 토픽 등록 (3일 활성)
+    // --- 내부 유틸 ---
+    private boolean isActive(Topic t) {
+        LocalDateTime now = LocalDateTime.now();
+        return t.getStatus() == TopicStatus.ACTIVE
+                && !t.getActiveFrom().isAfter(now)
+                && t.getActiveUntil().isAfter(now);
+    }
+
+    /**
+     * [관리자 전용]
+     * 새 토픽을 등록한다. (기본 활성 기간: 3일)
+     * status = ACTIVE 로 설정됨.
+     */
     @Transactional
     public TopicResponse createTopic(TopicCreateRequest req) {
         LocalDateTime from = (req.activeFrom() != null) ? req.activeFrom() : LocalDateTime.now();
         LocalDateTime until = from.plusDays(3);
+
         Topic topic = Topic.builder()
                 .question(req.question())
                 .activeFrom(from)
                 .activeUntil(until)
                 .build();
+
         topic.activate();
         return TopicResponse.of(topicRepository.save(topic));
     }
 
-    // 2) 토픽 수정(문구 수정)
+    /**
+     * [관리자 전용]
+     * 특정 토픽의 질문 문구를 수정한다.
+     */
     @Transactional
     public TopicResponse updateTopic(Long topicId, TopicUpdateRequest req) {
-        Topic t = topicRepository.findById(topicId).orElseThrow();
+        Topic t = topicRepository.findById(topicId).orElseThrow(() -> new GeneralException(ErrorStatus.TOPIC_NOT_FOUND));
         t.updateQuestion(req.question());
         return TopicResponse.of(t);
     }
 
-    // 활성 토픽 조회
+    /**
+     * 현재 시점에서 활성화된 토픽 1개를 조회한다.
+     */
     public TopicResponse getCurrentActiveTopic() {
         Topic t = topicRepository.findFirstByStatusAndActiveFromLessThanEqualAndActiveUntilGreaterThanOrderByActiveFromDesc(
                 TopicStatus.ACTIVE, LocalDateTime.now(), LocalDateTime.now()
-        ).orElseThrow();
+        ).orElseThrow(() -> new GeneralException(ErrorStatus.TOPIC_NOT_FOUND));
         return TopicResponse.of(t);
     }
 
-    // 5) 답변 생성(내 것) - 존재 시 덮어쓰기
+    /**
+     * [사용자 전용]
+     * 활성화된 토픽에 대해 내 답변을 새로 작성한다.
+     * - 이미 답변이 있으면 예외 발생 (수정 API 사용해야 함).
+     */
     @Transactional
     public AnswerResponse createAnswer(Long topicId, Long userId, AnswerCreateRequest req) {
-        Topic topic = topicRepository.findById(topicId).orElseThrow();
-        User user = userRepository.findById(userId).orElseThrow();
+        Topic topic = topicRepository.findById(topicId).orElseThrow(() -> new GeneralException(ErrorStatus.TOPIC_NOT_FOUND));
+        if (!isActive(topic)) {
+            throw new GeneralException(ErrorStatus.TOPIC_NOT_ACTIVE);
+        }
 
-        return answerRepository.findByTopicIdAndUserId(topicId, userId)
-                .map(ans -> { ans.updateContent(req.content()); return AnswerResponse.of(ans); })
-                .orElseGet(() -> {
-                    TopicAnswer a = TopicAnswer.builder().topic(topic).user(user).content(req.content()).build();
-                    return AnswerResponse.of(answerRepository.save(a));
-                });
+        answerRepository.findByTopicIdAndUserId(topicId, userId)
+                .ifPresent(a -> { throw new IllegalStateException("이미 답변이 존재합니다. 수정 API를 사용하세요."); });
+
+        User user = userRepository.findById(userId).orElseThrow();
+        TopicAnswer a = TopicAnswer.builder()
+                .topic(topic)
+                .user(user)
+                .content(req.content())
+                .build();
+        return AnswerResponse.of(answerRepository.save(a));
     }
 
-    // 6) 답변 수정(내 것)
+    /**
+     * [사용자 전용]
+     * 활성화된 토픽에 대해 내 답변을 수정한다.
+     */
     @Transactional
     public AnswerResponse updateAnswer(Long topicId, Long userId, AnswerUpdateRequest req) {
-        TopicAnswer a = answerRepository.findByTopicIdAndUserId(topicId, userId).orElseThrow();
+        Topic t = topicRepository.findById(topicId).orElseThrow(() -> new GeneralException(ErrorStatus.TOPIC_NOT_FOUND));
+        if (!isActive(t)) {
+            throw new GeneralException(ErrorStatus.TOPIC_NOT_ACTIVE);
+        }
+
+        TopicAnswer a = answerRepository.findByTopicIdAndUserId(topicId, userId).orElseThrow(() -> new GeneralException(ErrorStatus.ANSWER_NOT_FOUND));
         a.updateContent(req.content());
         return AnswerResponse.of(a);
     }
 
-    // 특정 토픽의 모든 답변(공개)
+    /**
+     * 특정 토픽에 달린 모든 답변을 조회한다. (전체 공개)
+     */
     public List<AnswerResponse> getTopicAnswers(Long topicId) {
-        return answerRepository.findAllByTopicId(topicId).stream().map(AnswerResponse::of).toList();
+        return answerRepository.findAllByTopicId(topicId)
+                .stream().map(AnswerResponse::of).toList();
     }
 
-    // 활성 토픽의 우리 가족 답변
+    /**
+     * 현재 활성화된 토픽에 대해,
+     * 특정 가족(familyId)의 모든 답변을 조회한다.
+     */
     public List<AnswerResponse> getFamilyAnswers(Long familyId) {
         Topic current = topicRepository.findFirstByStatusAndActiveFromLessThanEqualAndActiveUntilGreaterThanOrderByActiveFromDesc(
                 TopicStatus.ACTIVE, LocalDateTime.now(), LocalDateTime.now()
-        ).orElseThrow();
-        return answerRepository.findFamilyAnswers(current.getId(), familyId).stream().map(AnswerResponse::of).toList();
+        ).orElseThrow(() -> new GeneralException(ErrorStatus.TOPIC_NOT_FOUND));
+        return answerRepository.findFamilyAnswers(current.getId(), familyId)
+                .stream().map(AnswerResponse::of).toList();
     }
 
-    // 4) 특정 토픽의 우리 가족 답변
+    /**
+     * 특정 토픽에 대해,
+     * 특정 가족(familyId)의 모든 답변을 조회한다.
+     */
     public List<AnswerResponse> getFamilyAnswersByTopic(Long topicId, Long familyId) {
-        return answerRepository.findFamilyAnswersByTopic(topicId, familyId).stream().map(AnswerResponse::of).toList();
+        return answerRepository.findFamilyAnswersByTopic(topicId, familyId)
+                .stream().map(AnswerResponse::of).toList();
     }
 
-    // 3) 우리 가족이 답변 남긴 토픽 목록 & 개수
+    /**
+     * 특정 가족(familyId)이 답변을 남긴 모든 토픽 목록을 조회한다.
+     * - 토픽별 중복 제거 (첫 답변 순서 기준)
+     * - 총 개수 포함
+     */
     public FamilyAnsweredTopicsResponse getFamilyAnsweredTopics(Long familyId) {
-        // 가족 구성원들이 남긴 모든 답변 → 토픽 기준 중복 제거(첫 등장 순서 유지)
         List<TopicAnswer> raws = answerRepository.findAllByFamilyId(familyId);
+
         Map<Topic, List<TopicAnswer>> grouped = raws.stream()
                 .collect(Collectors.groupingBy(TopicAnswer::getTopic, LinkedHashMap::new, Collectors.toList()));
 

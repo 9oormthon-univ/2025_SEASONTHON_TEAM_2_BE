@@ -35,4 +35,8 @@ public class Topic {
 
     public void activate() { this.status = TopicStatus.ACTIVE; }
     public void updateQuestion(String q) { if (q != null) this.question = q; }
+
+    public void expire() {
+        this.status = TopicStatus.EXPIRED;
+    }
 }
