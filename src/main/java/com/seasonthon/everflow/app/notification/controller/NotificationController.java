@@ -35,4 +35,17 @@ public class NotificationController {
 
         return ResponseEntity.ok(ApiResponse.of(SuccessStatus.OK, resultDto));
     }
+
+    @Operation(summary = "알림 모두 읽기", description = "액션 알림을 제외한 모든 알림상태를 읽기로 전환합니다.")
+    @PatchMapping("/read-all")
+    public ResponseEntity<ApiResponse<NotificationResponseDto.ReadResponseDto>> readAllNotification(
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+
+        Long currentUserId = userDetails.getUserId();
+
+        NotificationResponseDto.ReadResponseDto resultDto =
+                notificationService.readALLNotification(currentUserId);
+
+        return ResponseEntity.ok(ApiResponse.of(SuccessStatus.OK, resultDto));
+    }
 }
