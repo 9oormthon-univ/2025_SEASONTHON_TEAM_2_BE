@@ -8,6 +8,8 @@ import com.seasonthon.everflow.app.appointment.dto.AppointmentResponseDto;
 import com.seasonthon.everflow.app.appointment.repository.AppointmentParticipantRepository;
 import com.seasonthon.everflow.app.appointment.repository.AppointmentRepository;
 import com.seasonthon.everflow.app.global.code.status.ErrorStatus;
+import com.seasonthon.everflow.app.global.oauth.domain.CustomUserDetails;
+import com.seasonthon.everflow.app.global.oauth.service.AuthService;
 import com.seasonthon.everflow.app.notification.domain.Notification;
 import com.seasonthon.everflow.app.notification.domain.NotificationType;
 import com.seasonthon.everflow.app.notification.repository.NotificationRepository;
@@ -35,6 +37,7 @@ public class AppointmentService {
     private final AppointmentParticipantRepository appointmentParticipantRepository;
     private final UserRepository userRepository;
     private final NotificationService notificationService;
+    private final AuthService authService;
 
     @Transactional
     public AppointmentResponseDto.AppointmentAddResponseDto addAppointment(AppointmentRequestDto.AppointmentAddRequestDto requestDto, Long proposeUserId) {
@@ -84,7 +87,8 @@ public class AppointmentService {
         return new AppointmentResponseDto.AppointmentAddResponseDto(savedAppointment.getId(), savedAppointment.getName());
     }
 
-    public AppointmentResponseDto.AppointmentMonthResponseDto getMonthAppointment(Long familyId, int year, int month) {
+    public AppointmentResponseDto.AppointmentMonthResponseDto getMonthAppointment(CustomUserDetails userDetails, int year, int month) {
+        Long familyId = authService.getFamilyId(userDetails);
 
         if (month < 1 || month > 12) {
             throw new GeneralException(ErrorStatus.INVALID_MONTH_PARAMETER);
@@ -118,7 +122,9 @@ public class AppointmentService {
         return new AppointmentResponseDto.AppointmentMonthResponseDto(daysWithAppointments);
     }
 
-    public List<AppointmentResponseDto.AppointmentDateResponseDto> getDateAppointment(Long familyId, int year, int month, int day) {
+    public List<AppointmentResponseDto.AppointmentDateResponseDto> getDateAppointment(CustomUserDetails userDetails,  int year, int month, int day) {
+        Long familyId = authService.getFamilyId(userDetails);
+
         if (month < 1 || month > 12) {
             throw new GeneralException(ErrorStatus.INVALID_MONTH_PARAMETER);
         }

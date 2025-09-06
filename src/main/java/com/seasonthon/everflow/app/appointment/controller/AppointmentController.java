@@ -43,28 +43,28 @@ public class AppointmentController {
     }
 
     @Operation(summary = "월별 약속 조회", description = "해당 월에 약속이 등록된 날짜들을 반환합니다.")
-    @GetMapping("/family/{familyId}")
+    @GetMapping("/month")
     public ResponseEntity<ApiResponse<AppointmentResponseDto.AppointmentMonthResponseDto>> getMonthAppointment(
-            @PathVariable Long familyId,
+            @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestParam int year,
             @RequestParam int month) {
 
         AppointmentResponseDto.AppointmentMonthResponseDto resultDto =
-                appointmentService.getMonthAppointment(familyId, year, month);
+                appointmentService.getMonthAppointment(userDetails, year, month);
 
         return ResponseEntity.ok(ApiResponse.of(SuccessStatus.OK, resultDto));
     }
 
     @Operation(summary = "일별 약속 조회", description = "해당 일자에 등록된 약속들을 반환합니다. participantNum은 외 @명에 들어가는 값으로, 총 참여자 수 -1명을 반환합니다.")
-    @GetMapping("/family/{familyId}/date")
+    @GetMapping("/date")
     public ResponseEntity<ApiResponse<List<AppointmentResponseDto.AppointmentDateResponseDto>>> getDateAppointment(
-            @PathVariable Long familyId,
+            @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestParam int year,
             @RequestParam int month,
             @RequestParam int day) {
 
         List<AppointmentResponseDto.AppointmentDateResponseDto> resultDtoList =
-                appointmentService.getDateAppointment(familyId, year, month, day);
+                appointmentService.getDateAppointment(userDetails, year, month, day);
 
         return ResponseEntity.ok(ApiResponse.of(SuccessStatus.OK, resultDtoList));
     }
