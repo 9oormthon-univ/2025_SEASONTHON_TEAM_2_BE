@@ -10,6 +10,7 @@ import java.util.List;
 public class FamilyMembersResponseDto {
 
     private String familyName;
+    private boolean creator;
     private List<MemberInfo> members;
 
     @Getter

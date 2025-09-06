@@ -137,10 +137,19 @@ public class FamilyService {
     public FamilyMembersResponseDto getFamilyMembers(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.USER_NOT_FOUND));
+
         Family family = user.getFamily();
         if (family == null) {
             throw new GeneralException(ErrorStatus.FAMILY_NOT_FOUND);
         }
+
+        boolean isCreator = family.getMembers().stream()
+                .min(Comparator
+                        .comparing(User::getCreatedAt, Comparator.nullsLast(Comparator.naturalOrder()))
+                        .thenComparing(User::getId))
+                .map(u -> u.getId().equals(user.getId()))
+                .orElse(false);
+
         List<FamilyMembersResponseDto.MemberInfo> memberInfos = family.getMembers().stream()
                 .sorted(Comparator.comparing(User::getCreatedAt, Comparator.nullsLast(Comparator.naturalOrder())))
                 .map(member -> new FamilyMembersResponseDto.MemberInfo(
@@ -148,8 +157,10 @@ public class FamilyService {
                         member.getProfileUrl()
                 ))
                 .toList();
-        return new FamilyMembersResponseDto(family.getFamilyName(), memberInfos);
+
+        return new FamilyMembersResponseDto(family.getFamilyName(), isCreator, memberInfos);
     }
+
 
     @Transactional(readOnly = true)
     public List<PendingJoinRequestDto> getPendingJoinRequests(Long approverId) {
