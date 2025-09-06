@@ -8,6 +8,10 @@ import com.seasonthon.everflow.app.appointment.dto.AppointmentResponseDto;
 import com.seasonthon.everflow.app.appointment.repository.AppointmentParticipantRepository;
 import com.seasonthon.everflow.app.appointment.repository.AppointmentRepository;
 import com.seasonthon.everflow.app.global.code.status.ErrorStatus;
+import com.seasonthon.everflow.app.notification.domain.Notification;
+import com.seasonthon.everflow.app.notification.domain.NotificationType;
+import com.seasonthon.everflow.app.notification.repository.NotificationRepository;
+import com.seasonthon.everflow.app.notification.service.NotificationService;
 import com.seasonthon.everflow.app.user.domain.User;
 import com.seasonthon.everflow.app.user.repository.UserRepository;
 import com.seasonthon.everflow.app.global.exception.GeneralException;
@@ -30,6 +34,7 @@ public class AppointmentService {
     private final AppointmentRepository appointmentRepository;
     private final AppointmentParticipantRepository appointmentParticipantRepository;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
 
     @Transactional
     public AppointmentResponseDto.AppointmentAddResponseDto addAppointment(AppointmentRequestDto.AppointmentAddRequestDto requestDto, Long proposeUserId) {
@@ -68,6 +73,12 @@ public class AppointmentService {
 
         // 5. 약속 정보 저장
         Appointment savedAppointment = appointmentRepository.save(appointment);
+
+        String link = "/api/appointments/" + savedAppointment.getId();
+        participants.forEach(participantUser -> {
+            String contentText = String.format("%s님이 %s에게 약속을 신청했어요.", proposeUser.getNickname(), participantUser.getNickname());
+            notificationService.sendNotification(participantUser, NotificationType.APPOINTMENT_ACTION, contentText, link);
+        });
 
         // 6. 생성된 약속의 ID를 담아 응답 반환
         return new AppointmentResponseDto.AppointmentAddResponseDto(savedAppointment.getId(), savedAppointment.getName());
@@ -172,12 +183,30 @@ public class AppointmentService {
         return new AppointmentResponseDto.MessageResponseDto("약속을 삭제하셨습니다.");
     }
 
-    @Transactional // 데이터를 변경하므로 readOnly가 아닌 @Transactional을 사용합니다.
+    @Transactional
     public AppointmentResponseDto.MessageResponseDto updateParticipantStatus(Long appointmentId, Long userId, AcceptStatus newStatus) {
         AppointmentParticipant participant = appointmentParticipantRepository.findByAppointmentIdAndUserId(appointmentId, userId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.PARTICIPANT_NOT_FOUND));
 
         participant.updateStatus(newStatus);
+
+        User proposer = participant.getAppointment().getProposeUser();
+        User participantUser = participant.getUser();
+
+        // 3-1. 응답 상태에 따라 알림 내용 결정
+        String contentText = "";
+        if (newStatus == AcceptStatus.ACCEPTED) {
+            contentText = String.format("%s님이 약속을 수락했어요.", participantUser.getNickname());
+        } else if (newStatus == AcceptStatus.REJECTED) {
+            contentText = String.format("%s님이 약속을 거절했어요.", participantUser.getNickname());
+        }
+
+        // 3-2. 알림 엔터티 생성 및 저장
+        if (!contentText.isEmpty()) {
+            String link = "/api/appointments/" + appointmentId;
+            notificationService.sendNotification(proposer, NotificationType.APPOINTMENT_RESPONSE, contentText, link);
+        }
+
         return new AppointmentResponseDto.MessageResponseDto("참여 상태가 성공적으로 변경되었습니다.");
     }
 

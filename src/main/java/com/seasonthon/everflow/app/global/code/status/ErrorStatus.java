@@ -63,9 +63,26 @@ public enum ErrorStatus implements BaseErrorCode {
     MESSAGE_ROOM_NOT_FOUND(HttpStatus.NOT_FOUND, "MESSAGE40413", "채팅방을 찾을 수 없습니다."),
     FAMILY_NOT_FOUND(HttpStatus.NOT_FOUND, "PARTICIPANT_REWARD40414", "가족 정보를 찾을 수 없습니다."),
     NOT_IN_FAMILY_YET(HttpStatus.NOT_FOUND, "PARTICIPANT_REWARD40415", "소속된 가족 정보를 찾을 수 없습니다."),
+    // == Auth 관련 에러 ==
+    AUTH_REQUIRED(HttpStatus.UNAUTHORIZED, "AUTH401", "인증 정보가 필요합니다."),
     // == Appointment 관련 에러 ==
     APPOINTMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "APPOINTMENT4041", "해당 약속을 찾을 수 없습니다."),
     PARTICIPANT_NOT_FOUND(HttpStatus.NOT_FOUND, "PARTICIPANT4041", "해당 약속의 참여자가 아닙니다."),
+    // == Topic 관련 에러 ==
+    TOPIC_NOT_FOUND(HttpStatus.NOT_FOUND, "TOPIC4041", "해당 토픽을 찾을 수 없습니다."),
+    ANSWER_NOT_FOUND(HttpStatus.NOT_FOUND, "ANSWER4041", "해당 답변을 찾을 수 없습니다."),
+    TOPIC_NOT_ACTIVE(HttpStatus.BAD_REQUEST, "TOPIC4001", "활성화된 토픽이 아닙니다."),
+    // == Home 관련 에러 ==
+    HOME_DATA_NOT_FOUND(HttpStatus.NOT_FOUND, "HOME4041", "최근 30일간 답변 데이터가 없습니다."),
+    FAMILY_PARTICIPATION_NOT_FOUND(HttpStatus.NOT_FOUND, "HOME4042", "해당 가족의 참여 기록이 없습니다."),
+    INVALID_HOME_SCOPE(HttpStatus.BAD_REQUEST, "HOME4001", "잘못된 범위(scope) 값입니다."),
+    // == BookShelf 관련 에러 ==
+    BOOKSHELF_INVALID_PARAMETER(HttpStatus.BAD_REQUEST,"BOOKSHELF4001", "잘못된 책장 요청입니다."),
+    BOOKSHELF_FAMILY_NOT_FOUND(HttpStatus.NOT_FOUND, "BOOKSHELF4041", "가족을 찾을 수 없습니다."),
+    BOOKSHELF_MEMBERS_NOT_FOUND(HttpStatus.NOT_FOUND, "BOOKSHELF4042", "가족 구성원이 존재하지 않습니다."),
+
+
+
 
     // 405 Method Not Allowed
     METHOD_NOT_ALLOWED(HttpStatus.METHOD_NOT_ALLOWED, "COMMON405", "허용되지 않는 HTTP 메서드입니다."),

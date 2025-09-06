@@ -10,6 +10,8 @@ import com.seasonthon.everflow.app.family.dto.FamilyVerificationResponseDto;
 import com.seasonthon.everflow.app.family.repository.FamilyRepository;
 import com.seasonthon.everflow.app.global.code.status.ErrorStatus;
 import com.seasonthon.everflow.app.global.exception.GeneralException;
+import com.seasonthon.everflow.app.notification.domain.NotificationType;
+import com.seasonthon.everflow.app.notification.service.NotificationService;
 import com.seasonthon.everflow.app.user.domain.RoleType;
 import com.seasonthon.everflow.app.user.domain.User;
 import com.seasonthon.everflow.app.user.repository.UserRepository;
@@ -28,6 +30,7 @@ public class FamilyService {
 
     private final FamilyRepository familyRepository;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
 
     public void createFamily(Long userId, FamilyCreateRequestDto request) {
         User user = userRepository.findById(userId)
@@ -65,6 +68,7 @@ public class FamilyService {
         Family family = familyRepository.findByInviteCode(request.getInviteCode())
                 .orElseThrow(() -> new GeneralException(ErrorStatus.FAMILY_NOT_FOUND));
 
+        // 초대 코드 요청 시 시도 횟수 리셋
         user.resetFamilyJoinAttempts();
         userRepository.save(user);
 
@@ -87,20 +91,49 @@ public class FamilyService {
         Family family = familyRepository.findByInviteCode(request.getInviteCode())
                 .orElseThrow(() -> new GeneralException(ErrorStatus.FAMILY_NOT_FOUND));
 
-        boolean correct = family.getVerificationAnswer().equals(request.getVerificationAnswer());
-        if (!correct) {
+        List<User> existingMembers = userRepository.findAllByFamilyId(family.getId());
+
+        // 검증 실패
+        if (!family.getVerificationAnswer().equals(request.getVerificationAnswer())) {
             user.increaseFamilyJoinAttempts();
             userRepository.save(user);
+
             if (user.getFamilyJoinAttempts() >= MAX_ATTEMPTS) {
+                String link = "";
+                String contentText = String.format(
+                        "%s님이 가족 가입에 %d회 연속 실패했습니다. 가입 요청을 확인해주세요.",
+                        user.getNickname(), MAX_ATTEMPTS
+                );
+
+                existingMembers.forEach(recipient -> notificationService.sendNotification(
+                        recipient,
+                        NotificationType.FAMILY_ACTION,
+                        contentText,
+                        link
+                ));
                 throw new GeneralException(ErrorStatus.FAMILY_JOIN_ATTEMPT_EXCEEDED);
             }
             throw new GeneralException(ErrorStatus.INVALID_VERIFICATION_ANSWER);
         }
 
+        // 검증 성공
         family.addMember(user);
         user.updateRole(RoleType.ROLE_USER);
         user.resetFamilyJoinAttempts();
         userRepository.save(user);
+
+        String link = "";
+        String contentText = String.format("%s님이 %s에 입장했어요.", user.getNickname(), family.getFamilyName());
+
+        existingMembers.stream()
+                .filter(member -> !member.getId().equals(user.getId()))
+                .forEach(recipient -> notificationService.sendNotification(
+                        recipient,
+                        NotificationType.FAMILY_RESPONSE,
+                        contentText,
+                        link
+                ));
+
         familyRepository.save(family);
     }
 

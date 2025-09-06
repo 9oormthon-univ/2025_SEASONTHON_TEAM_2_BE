@@ -45,6 +45,7 @@ public class Appointment {
     private String location;
 
     @Column(name = "start_time", nullable = false)
+
     private LocalDateTime startTime;
 
     @Column(name = "end_time", nullable = false)
@@ -88,6 +89,7 @@ public class Appointment {
     }
 
     public void updateDetails(String name, String content, String location, LocalDateTime startTime, LocalDateTime endTime, AppointmentColor color) {
+
         this.name = name;
         this.content = content;
         this.location = location;
