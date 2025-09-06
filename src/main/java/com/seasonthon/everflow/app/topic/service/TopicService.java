@@ -2,6 +2,8 @@ package com.seasonthon.everflow.app.topic.service;
 
 import com.seasonthon.everflow.app.global.code.status.ErrorStatus;
 import com.seasonthon.everflow.app.global.exception.GeneralException;
+import com.seasonthon.everflow.app.notification.domain.NotificationType;
+import com.seasonthon.everflow.app.notification.service.NotificationService;
 import com.seasonthon.everflow.app.topic.domain.*;
 import com.seasonthon.everflow.app.topic.dto.TopicDto.*;
 import com.seasonthon.everflow.app.topic.repository.TopicAnswerRepository;
@@ -26,6 +28,7 @@ public class TopicService {
     private final TopicRepository topicRepository;
     private final TopicAnswerRepository answerRepository;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
 
     // --- 내부 유틸 ---
     private boolean isActive(Topic t) {
@@ -97,6 +100,26 @@ public class TopicService {
                 .user(user)
                 .content(req.content())
                 .build();
+
+        if (user.getFamily() != null) {
+            // 3. 답변한 사용자의 가족 구성원 전체를 조회합니다.
+            List<User> familyMembers = userRepository.findAllByFamilyId(user.getFamily().getId());
+
+            // 4. 알림에 사용할 공통 링크와 내용을 준비합니다.
+            String link = "/api/topics/" + topicId + "/answers/family";
+            String contentText = String.format("%s님이 세대토픽에 답변했어요.", user.getNickname());
+
+            // 5. 가족 구성원들에게 알림을 발송합니다 (답변자 본인 제외).
+            familyMembers.stream()
+                    .filter(member -> !member.getId().equals(userId))
+                    .forEach(recipient -> notificationService.sendNotification(
+                            recipient,
+                            NotificationType.ANSWER_RESPONSE,
+                            contentText,
+                            link
+                    ));
+        }
+
         return AnswerResponse.of(answerRepository.save(a));
     }
 
