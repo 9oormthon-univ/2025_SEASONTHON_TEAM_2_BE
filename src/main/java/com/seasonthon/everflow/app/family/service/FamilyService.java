@@ -18,6 +18,8 @@ import com.seasonthon.everflow.app.global.code.status.ErrorStatus;
 import com.seasonthon.everflow.app.global.code.status.SuccessStatus;
 import com.seasonthon.everflow.app.global.exception.GeneralException;
 import com.seasonthon.everflow.app.notification.domain.NotificationType;
+import com.seasonthon.everflow.app.notification.domain.ReadStatus;
+import com.seasonthon.everflow.app.notification.repository.NotificationRepository;
 import com.seasonthon.everflow.app.notification.service.NotificationService;
 import com.seasonthon.everflow.app.user.domain.RoleType;
 import com.seasonthon.everflow.app.user.domain.User;
@@ -38,6 +40,7 @@ public class FamilyService {
     private final FamilyJoinRequestRepository familyJoinRequestRepository;
     private final UserRepository userRepository;
     private final NotificationService notificationService;
+    private final NotificationRepository notificationRepository;
 
     public void createFamily(Long userId, FamilyCreateRequestDto request) {
         User user = userRepository.findById(userId)
@@ -189,6 +192,16 @@ public class FamilyService {
     public void approveJoinRequest(Long approverId, Long requestId) {
         FamilyJoinRequest joinRequest = familyJoinRequestRepository.findById(requestId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.REQUEST_NOT_FOUND));
+
+        notificationRepository.findAllByUserIdAndReadStatusOrderByCreatedAtDesc(approverId, ReadStatus.UNREAD).stream()
+                .filter(n -> n.getNotificationType() == NotificationType.FAMILY_ACTION)
+                .filter(n -> n.getContentText().contains(joinRequest.getUser().getNickname()))
+                .findFirst()
+                .ifPresent(notification -> {
+                    notification.markAsRead();
+                    notificationRepository.save(notification);
+                });
+
         Family family = joinRequest.getFamily();
         var creator = family.getMembers().stream()
                 .min(java.util.Comparator.comparing(User::getCreatedAt))
@@ -211,6 +224,16 @@ public class FamilyService {
     public void rejectJoinRequest(Long approverId, Long requestId) {
         FamilyJoinRequest joinRequest = familyJoinRequestRepository.findById(requestId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.REQUEST_NOT_FOUND));
+
+        notificationRepository.findAllByUserIdAndReadStatusOrderByCreatedAtDesc(approverId, ReadStatus.UNREAD).stream()
+                .filter(n -> n.getNotificationType() == NotificationType.FAMILY_ACTION)
+                .filter(n -> n.getContentText().contains(joinRequest.getUser().getNickname()))
+                .findFirst()
+                .ifPresent(notification -> {
+                    notification.markAsRead();
+                    notificationRepository.save(notification);
+                });
+
         Family family = joinRequest.getFamily();
         var creator = family.getMembers().stream()
                 .min(java.util.Comparator.comparing(User::getCreatedAt))
