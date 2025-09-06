@@ -152,7 +152,8 @@ public class AppointmentService {
                         appointment.getEndTime().format(formatter),
                         appointment.getLocation(),
                         appointment.getProposeUser().getNickname(),
-                        (long) appointment.getParticipants().size()-1
+                        (long) appointment.getParticipants().size()-1,
+                        appointment.getColor()
                 ))
                 .collect(Collectors.toList());
     }
@@ -173,7 +174,8 @@ public class AppointmentService {
                 appointment.getEndTime().format(formatter),
                 appointment.getLocation(),
                 appointment.getContent(),
-                appointment.getProposeUser().getNickname()
+                appointment.getProposeUser().getNickname(),
+                appointment.getColor()
         );
     }
 
