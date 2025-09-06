@@ -6,6 +6,7 @@ import com.seasonthon.everflow.app.global.oauth.domain.CustomUserDetails;
 import com.seasonthon.everflow.app.notification.dto.NotificationResponseDto;
 import com.seasonthon.everflow.app.notification.service.NotificationService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jdk.jfr.Description;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +18,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/notifications")
 @RequiredArgsConstructor
+@Tag(name="Notification API", description = "알림 관련 api")
 public class NotificationController {
 
     private final NotificationService notificationService;
