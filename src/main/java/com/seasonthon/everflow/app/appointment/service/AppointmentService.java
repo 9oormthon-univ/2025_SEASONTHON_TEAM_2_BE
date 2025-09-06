@@ -38,6 +38,7 @@ public class AppointmentService {
     private final UserRepository userRepository;
     private final NotificationService notificationService;
     private final AuthService authService;
+    private final NotificationRepository notificationRepository;
 
     @Transactional
     public AppointmentResponseDto.AppointmentAddResponseDto addAppointment(AppointmentRequestDto.AppointmentAddRequestDto requestDto, Long proposeUserId) {
@@ -205,6 +206,15 @@ public class AppointmentService {
 
         participant.updateStatus(newStatus);
 
+        // 사용자가 약속을 수락/거절하면, 해당 약속 요청 알림을 읽음 처리합니다.
+        String link = "/api/appointments/" + appointmentId;
+        notificationRepository.findByUserIdAndLinkAndNotificationType(userId, link, NotificationType.APPOINTMENT_ACTION)
+                .ifPresent(notification -> {
+                    notification.markAsRead();
+                    notificationRepository.save(notification);
+                });
+
+
         User proposer = participant.getAppointment().getProposeUser();
         User participantUser = participant.getUser();
 
@@ -218,11 +228,11 @@ public class AppointmentService {
 
         // 3-2. 알림 엔터티 생성 및 저장
         if (!contentText.isEmpty()) {
-            String link = "/api/appointments/" + appointmentId;
             notificationService.sendNotification(proposer, NotificationType.APPOINTMENT_RESPONSE, contentText, link);
         }
 
         return new AppointmentResponseDto.MessageResponseDto("참여 상태가 성공적으로 변경되었습니다.");
     }
+
 
 }
