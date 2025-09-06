@@ -5,6 +5,9 @@ server:
     key-store: file:/etc/certs/keystore.p12
     key-store-password: ${KEYSTORE_PASSWORD:030304}
     key-store-type: PKCS12
+  tomcat:
+    max-http-form-post-size: -1
+    max-swallow-size: -1
 
 cloud:
   aws:
@@ -12,6 +15,9 @@ cloud:
       static: ${S3_REGION:ecrregion}
     s3:
       bucket: ${S3_BUCKETNAME:ecrname}
+    credentials:
+      access-key: ${AWS_ACCESS_KEY_ID}
+      secret-key: ${AWS_SECRET_ACCESS_KEY}
 
 spring:
   profiles:
