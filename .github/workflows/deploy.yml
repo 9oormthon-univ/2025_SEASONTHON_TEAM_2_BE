@@ -79,16 +79,17 @@ jobs:
             
             docker run -d --name my-app --restart unless-stopped \
               -p 8443:8443 \
-              -v /etc/certs/keystore.p12:/etc/certs/keystore.p12 \
+              -v /etc/certs/keystore.p12:/etc/certs/keystore.p12:ro \
+              -e SPRING_PROFILES_ACTIVE=prod \
               -e DB_HOST=${{ secrets.DB_HOST }} \
               -e DB_USERNAME=${{ secrets.DB_USERNAME }} \
               -e DB_PASSWORD=${{ secrets.DB_PASSWORD }} \
               -e DB_NAME=${{ secrets.DB_NAME }} \
-              -e JWT_SECRET_KEY=${{ env.JWT_SECRET_KEY }} \
-              -e JWT_ACCESS_EXPIRATION=${{ env.JWT_ACCESS_EXPIRATION }} \
-              -e JWT_ACCESS_HEADER=${{ env.JWT_ACCESS_HEADER }} \
-              -e JWT_REFRESH_EXPIRATION=${{ env.JWT_REFRESH_EXPIRATION }} \
-              -e JWT_REFRESH_HEADER=${{ env.JWT_REFRESH_HEADER }} \
+              -e JWT_SECRET_KEY='${{ env.JWT_SECRET_KEY }}' \
+              -e JWT_ACCESS_EXPIRATION='${{ env.JWT_ACCESS_EXPIRATION }}' \
+              -e JWT_ACCESS_HEADER='${{ env.JWT_ACCESS_HEADER }}' \
+              -e JWT_REFRESH_EXPIRATION='${{ env.JWT_REFRESH_EXPIRATION }}' \
+              -e JWT_REFRESH_HEADER='${{ env.JWT_REFRESH_HEADER }}' \
               -e S3_REGION=${{ secrets.S3_REGION }} \
               -e S3_BUCKETNAME=${{ secrets.S3_BUCKETNAME }} \
               -e TZ=Asia/Seoul \

@@ -6,6 +6,7 @@ import com.seasonthon.everflow.app.global.code.dto.TestLoginRequestDto;
 import com.seasonthon.everflow.app.global.code.dto.UserInfoResponseDto;
 import com.seasonthon.everflow.app.global.oauth.domain.CustomUserDetails;
 import com.seasonthon.everflow.app.global.oauth.service.AuthService;
+import com.seasonthon.everflow.app.global.security.JwtService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final AuthService authService;
+    private final JwtService jwtService;
 
     @Operation(summary = "OIDC 로그인", description = "카카오에서 받은 id_token으로 로그인/회원가입 처리 후 우리 서비스의 토큰을 발급합니다.")
     @PostMapping("/login")
@@ -52,10 +54,13 @@ public class AuthController {
         return ApiResponse.onSuccess(tokens);
     }
 
-    @Operation(summary = "토큰 재발급", description = "리프레시 토큰을 사용하여 새로운 액세스 토큰을 발급합니다.")
+    @Operation(summary = "토큰 재발급", description = "헤더 RefreshToken(Bearer 포함 가능)으로 새 Access/Refresh 토큰 발급")
     @PostMapping("/reissue")
-    public ApiResponse<LoginResponseDto> reissue(@RequestHeader("refresh_token") String refreshToken) {
-        LoginResponseDto tokens = authService.reissue(refreshToken);
-        return ApiResponse.onSuccess(tokens);
+    public ApiResponse<LoginResponseDto> reissue(
+            @RequestHeader("RefreshToken") String refreshHeaderValue
+    ) {
+        String refreshToken = jwtService.extractToken(refreshHeaderValue)
+                .orElse(refreshHeaderValue);
+        return ApiResponse.onSuccess(authService.reissue(refreshToken));
     }
 }

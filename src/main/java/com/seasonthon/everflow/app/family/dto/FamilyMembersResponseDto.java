@@ -10,6 +10,7 @@ import java.util.List;
 public class FamilyMembersResponseDto {
 
     private String familyName;
+    private boolean creator;
     private List<MemberInfo> members;
 
     @Getter
@@ -17,5 +18,6 @@ public class FamilyMembersResponseDto {
     public static class MemberInfo {
         private String nickname;
         private String profileUrl;
+        private Long id;
     }
 }

@@ -35,6 +35,7 @@ public class Family {
     @Column(name = "verification_answer")
     private String verificationAnswer;
 
+    @OrderBy("createdAt ASC")   // createdAt 기준 오름차순 정렬
     @OneToMany(mappedBy = "family", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<User> members = new ArrayList<>();
 
@@ -55,5 +56,11 @@ public class Family {
         Random random = new Random();
         int code = 100000 + random.nextInt(900000);
         return String.valueOf(code);
+    }
+
+    public void updateFamilyName(String name) { this.familyName = name; }
+    public void updateVerification(String question, String answer) {
+        this.verificationQuestion = question;
+        this.verificationAnswer = answer;
     }
 }
