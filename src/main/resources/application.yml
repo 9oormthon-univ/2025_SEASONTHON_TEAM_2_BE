@@ -36,6 +36,10 @@ spring:
       hibernate:
         format_sql: true
     show-sql: true
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 5MB
 
 jwt:
   secretKey: ${JWT_SECRET_KEY:1234512345}
