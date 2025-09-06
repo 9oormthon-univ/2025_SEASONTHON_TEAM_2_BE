@@ -102,8 +102,8 @@ public class JwtService {
      * "Bearer "를 제외한 실제 토큰 값을 추출합니다.
      */
     public Optional<String> extractToken(String bearerToken) {
-        if (bearerToken != null && bearerToken.startsWith(BEARER_PREFIX)) {
-            return Optional.of(bearerToken.replace(BEARER_PREFIX, ""));
+        if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
+            return Optional.of(bearerToken.substring("Bearer ".length()));
         }
         return Optional.empty();
     }
