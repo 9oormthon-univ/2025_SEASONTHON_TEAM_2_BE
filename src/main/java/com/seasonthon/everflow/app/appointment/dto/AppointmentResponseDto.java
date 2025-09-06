@@ -1,5 +1,6 @@
 package com.seasonthon.everflow.app.appointment.dto;
 
+import com.seasonthon.everflow.app.appointment.domain.AppointmentColor;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -30,6 +31,7 @@ public class AppointmentResponseDto{
         private String location;
         private String proposeUserName;
         private Long participantNum;
+        private AppointmentColor color;
     }
 
     @Getter
@@ -42,6 +44,7 @@ public class AppointmentResponseDto{
         private String location;
         private String content;
         private String proposeUserName;
+        private AppointmentColor color;
 
     }
 
