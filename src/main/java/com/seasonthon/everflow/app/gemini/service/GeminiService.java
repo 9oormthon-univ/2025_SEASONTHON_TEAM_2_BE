@@ -3,10 +3,15 @@ package com.seasonthon.everflow.app.gemini.service;
 import com.seasonthon.everflow.app.gemini.config.GeminiInterface;
 import com.seasonthon.everflow.app.gemini.dto.GeminiRequestDto;
 import com.seasonthon.everflow.app.gemini.dto.GeminiResponseDto;
+import com.seasonthon.everflow.app.global.code.status.ErrorStatus;
+import com.seasonthon.everflow.app.global.exception.GeneralException;
 import com.seasonthon.everflow.app.topic.domain.TopicType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.ResourceAccessException;
+import org.springframework.web.client.HttpStatusCodeException;
+import org.springframework.web.client.RestClientException;
 
 import java.util.Optional;
 
@@ -35,10 +40,25 @@ public class GeminiService {
      */
     public String getCompletion(String prompt, String model) {
         GeminiRequestDto request = new GeminiRequestDto(prompt);
-        GeminiResponseDto response = geminiInterface.getCompletion(model, request);
+        final GeminiResponseDto response;
+        try {
+            response = geminiInterface.getCompletion(model, request);
+        } catch (ResourceAccessException e) {
+            // 네트워크 타임아웃/연결 문제
+            throw new GeneralException(ErrorStatus.GEMINI_TIMEOUT);
+        } catch (HttpStatusCodeException e) {
+            // 4xx/5xx 등 HTTP 상태 코드 오류
+            throw new GeneralException(ErrorStatus.GEMINI_HTTP_ERROR);
+        } catch (RestClientException e) {
+            // 위에 매핑되지 않은 나머지 RestClient 예외
+            throw new GeneralException(ErrorStatus.GEMINI_CALL_FAILED);
+        } catch (RuntimeException e) {
+            // 예기치 못한 런타임 예외
+            throw new GeneralException(ErrorStatus.GEMINI_CALL_FAILED);
+        }
 
         if (response == null || response.getCandidates() == null || response.getCandidates().isEmpty()) {
-            throw new IllegalStateException("Gemini 응답이 비어있음(candidates null/empty)");
+            throw new GeneralException(ErrorStatus.GEMINI_BAD_RESPONSE);
         }
 
         return response.getCandidates().stream()
@@ -47,7 +67,7 @@ public class GeminiService {
                         .filter(cnt -> cnt.getParts() != null && !cnt.getParts().isEmpty())
                         .flatMap(cnt -> cnt.getParts().stream().findFirst())
                         .map(GeminiResponseDto.TextPart::getText))
-                .orElseThrow(() -> new IllegalStateException("Gemini 응답 내용 파싱 실패 (parts null/empty)"));
+                .orElseThrow(() -> new GeneralException(ErrorStatus.GEMINI_BAD_RESPONSE));
     }
 
     /**
@@ -58,7 +78,7 @@ public class GeminiService {
      * - 45자 초과 시 공백 기준으로 자르고 ? 보장
      */
     private String sanitizeQuestion(String raw) {
-        if (raw == null) return "";
+        if (raw == null) throw new GeneralException(ErrorStatus.GEMINI_EMPTY_QUESTION);
 
         // 첫 줄만
         String line = raw.strip().split("\\R", 2)[0];
