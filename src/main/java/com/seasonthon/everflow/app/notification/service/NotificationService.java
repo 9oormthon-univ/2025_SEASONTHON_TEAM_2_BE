@@ -7,6 +7,7 @@ import com.seasonthon.everflow.app.notification.domain.NotificationType;
 import com.seasonthon.everflow.app.notification.domain.ReadStatus;
 import com.seasonthon.everflow.app.notification.dto.NotificationResponseDto;
 import com.seasonthon.everflow.app.notification.repository.NotificationRepository;
+import com.seasonthon.everflow.app.user.domain.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -92,4 +93,15 @@ public class NotificationService {
             default -> "기타알림";
         };
     }
+
+    public void sendNotification(User recipient, NotificationType type, String content, String link) {
+        Notification notification = Notification.builder()
+                .user(recipient)
+                .notificationType(type)
+                .contentText(content)
+                .link(link)
+                .build();
+        notificationRepository.save(notification);
+    }
+
 }
