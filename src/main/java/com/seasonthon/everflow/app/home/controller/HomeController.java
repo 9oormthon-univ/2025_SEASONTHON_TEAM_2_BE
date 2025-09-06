@@ -38,9 +38,11 @@ public class HomeController {
     }
 
     /** 2) 현재 활성 토픽 조회 */
-    @Operation(summary = "현재 활성 토픽 조회", description = "활성 기간에 해당하는 오늘의 질문을 반환합니다.")
+    @Operation(summary = "현재 활성 토픽 조회", description = "활성 기간에 해당하는 오늘의 질문과 남은 일수(daysLeft)를 반환합니다.")
     @GetMapping("/topics/current")
     public ApiResponse<TopicDto.TopicResponse> getCurrentTopic() {
+        // 서비스에서 현재 활성 토픽을 조회하여 DTO로 반환
+        // (DTO 내부에 daysLeft가 포함되어 있어야 하며, 서비스에서 계산/세팅하는 것을 권장)
         return ApiResponse.onSuccess(topicService.getCurrentActiveTopic());
     }
 

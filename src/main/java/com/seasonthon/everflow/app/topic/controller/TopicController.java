@@ -3,6 +3,7 @@ package com.seasonthon.everflow.app.topic.controller;
 import com.seasonthon.everflow.app.global.code.dto.ApiResponse;
 import com.seasonthon.everflow.app.global.oauth.domain.CustomUserDetails;
 import com.seasonthon.everflow.app.global.oauth.service.AuthService;
+import com.seasonthon.everflow.app.topic.domain.TopicType;
 import com.seasonthon.everflow.app.topic.dto.TopicDto;
 import com.seasonthon.everflow.app.topic.service.TopicService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -92,5 +93,11 @@ public class TopicController {
     ) {
         Long userId = authService.getUserId(me);
         return ApiResponse.onSuccess(topicService.updateAnswer(topicId, userId, req));
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping("/admin/daily")
+    public ApiResponse<TopicDto.TopicResponse> makeDaily(@RequestParam TopicType type){
+        return ApiResponse.onSuccess(topicService.createDailyTopicFromGemini(type));
     }
 }

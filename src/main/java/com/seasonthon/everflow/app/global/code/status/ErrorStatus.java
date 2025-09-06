@@ -72,6 +72,7 @@ public enum ErrorStatus implements BaseErrorCode {
     TOPIC_NOT_FOUND(HttpStatus.NOT_FOUND, "TOPIC4041", "해당 토픽을 찾을 수 없습니다."),
     ANSWER_NOT_FOUND(HttpStatus.NOT_FOUND, "ANSWER4041", "해당 답변을 찾을 수 없습니다."),
     TOPIC_NOT_ACTIVE(HttpStatus.BAD_REQUEST, "TOPIC4001", "활성화된 토픽이 아닙니다."),
+    ANSWER_ALREADY_EXISTS(HttpStatus.CONFLICT, "ANSWER4091", "이미 답변이 존재합니다. 수정 API를 이용하세요."),
     // == Home 관련 에러 ==
     HOME_DATA_NOT_FOUND(HttpStatus.NOT_FOUND, "HOME4041", "최근 30일간 답변 데이터가 없습니다."),
     FAMILY_PARTICIPATION_NOT_FOUND(HttpStatus.NOT_FOUND, "HOME4042", "해당 가족의 참여 기록이 없습니다."),
@@ -80,6 +81,12 @@ public enum ErrorStatus implements BaseErrorCode {
     BOOKSHELF_INVALID_PARAMETER(HttpStatus.BAD_REQUEST,"BOOKSHELF4001", "잘못된 책장 요청입니다."),
     BOOKSHELF_FAMILY_NOT_FOUND(HttpStatus.NOT_FOUND, "BOOKSHELF4041", "가족을 찾을 수 없습니다."),
     BOOKSHELF_MEMBERS_NOT_FOUND(HttpStatus.NOT_FOUND, "BOOKSHELF4042", "가족 구성원이 존재하지 않습니다."),
+    // == Gemini 관련 에러 ==
+    GEMINI_TIMEOUT(HttpStatus.GATEWAY_TIMEOUT, "GEMINI5041", "Gemini 요청이 시간 초과되었습니다."),
+    GEMINI_HTTP_ERROR(HttpStatus.BAD_GATEWAY, "GEMINI5021", "Gemini API 호출 중 HTTP 오류가 발생했습니다."),
+    GEMINI_BAD_RESPONSE(HttpStatus.BAD_GATEWAY, "GEMINI5022", "Gemini 응답 형식이 올바르지 않습니다."),
+    GEMINI_CALL_FAILED(HttpStatus.SERVICE_UNAVAILABLE, "GEMINI5031", "Gemini 호출에 실패했습니다."),
+    GEMINI_EMPTY_QUESTION(HttpStatus.UNPROCESSABLE_ENTITY, "GEMINI4221", "생성된 질문이 비어 있습니다."),
 
     REQUEST_NOT_FOUND(HttpStatus.NOT_FOUND, "FAMILYJOIN4040", "가입 요청을 찾을 수 없습니다."),
 
