@@ -24,6 +24,8 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class FamilyService {
 
+    private static final int MAX_ATTEMPTS = 4;
+
     private final FamilyRepository familyRepository;
     private final UserRepository userRepository;
 
@@ -63,8 +65,8 @@ public class FamilyService {
         Family family = familyRepository.findByInviteCode(request.getInviteCode())
                 .orElseThrow(() -> new GeneralException(ErrorStatus.FAMILY_NOT_FOUND));
 
-        // 닉네임 업데이트는 가입 완료 단계에서 하는 것이 더 좋으므로, 여기서는 닉네임만 유효성 검사
-        // user.updateNickname(request.getNickname());
+        user.resetFamilyJoinAttempts();
+        userRepository.save(user);
 
         return new FamilyVerificationResponseDto(family.getVerificationQuestion());
     }
@@ -77,16 +79,20 @@ public class FamilyService {
             throw new GeneralException(ErrorStatus.FAMILY_ALREADY_EXISTS);
         }
 
+        int attempts = user.getFamilyJoinAttempts() == null ? 0 : user.getFamilyJoinAttempts();
+        if (attempts >= MAX_ATTEMPTS) {
+            throw new GeneralException(ErrorStatus.FAMILY_JOIN_ATTEMPT_EXCEEDED);
+        }
+
         Family family = familyRepository.findByInviteCode(request.getInviteCode())
                 .orElseThrow(() -> new GeneralException(ErrorStatus.FAMILY_NOT_FOUND));
 
-        if (!family.getVerificationAnswer().equals(request.getVerificationAnswer())) {
+        boolean correct = family.getVerificationAnswer().equals(request.getVerificationAnswer());
+        if (!correct) {
             user.increaseFamilyJoinAttempts();
             userRepository.save(user);
-
-            if (user.getFamilyJoinAttempts() >= 3) {
-                // TODO: 3회 이상 실패 시, 가입 대기 상태로 전환하고 알림을 보내는 등의 로직 추가
-                throw new GeneralException(ErrorStatus.FAMILY_JOIN_FAILED);
+            if (user.getFamilyJoinAttempts() >= MAX_ATTEMPTS) {
+                throw new GeneralException(ErrorStatus.FAMILY_JOIN_ATTEMPT_EXCEEDED);
             }
             throw new GeneralException(ErrorStatus.INVALID_VERIFICATION_ANSWER);
         }
@@ -94,7 +100,7 @@ public class FamilyService {
         family.addMember(user);
         user.updateRole(RoleType.ROLE_USER);
         user.resetFamilyJoinAttempts();
-
+        userRepository.save(user);
         familyRepository.save(family);
     }
 
