@@ -2,6 +2,7 @@ package com.seasonthon.everflow.app.topic.dto;
 
 import com.seasonthon.everflow.app.topic.domain.Topic;
 import com.seasonthon.everflow.app.topic.domain.TopicAnswer;
+import com.seasonthon.everflow.app.topic.domain.TopicType;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -9,7 +10,7 @@ import java.util.List;
 public class TopicDto {
 
     // 생성 요청
-    public record TopicCreateRequest(String question, LocalDateTime activeFrom) {}
+    public record TopicCreateRequest(String question, LocalDateTime activeFrom,TopicType topicType){}
 
     // 토픽 응답
     public record TopicResponse(Long id, String question, LocalDateTime activeFrom, LocalDateTime activeUntil) {

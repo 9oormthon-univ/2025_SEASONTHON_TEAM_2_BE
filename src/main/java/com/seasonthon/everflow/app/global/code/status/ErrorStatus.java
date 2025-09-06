@@ -71,6 +71,7 @@ public enum ErrorStatus implements BaseErrorCode {
     TOPIC_NOT_FOUND(HttpStatus.NOT_FOUND, "TOPIC4041", "해당 토픽을 찾을 수 없습니다."),
     ANSWER_NOT_FOUND(HttpStatus.NOT_FOUND, "ANSWER4041", "해당 답변을 찾을 수 없습니다."),
     TOPIC_NOT_ACTIVE(HttpStatus.BAD_REQUEST, "TOPIC4001", "활성화된 토픽이 아닙니다."),
+    ANSWER_ALREADY_EXISTS(HttpStatus.CONFLICT, "ANSWER4091", "이미 답변이 존재합니다. 수정 API를 이용하세요."),
     // == Home 관련 에러 ==
     HOME_DATA_NOT_FOUND(HttpStatus.NOT_FOUND, "HOME4041", "최근 30일간 답변 데이터가 없습니다."),
     FAMILY_PARTICIPATION_NOT_FOUND(HttpStatus.NOT_FOUND, "HOME4042", "해당 가족의 참여 기록이 없습니다."),

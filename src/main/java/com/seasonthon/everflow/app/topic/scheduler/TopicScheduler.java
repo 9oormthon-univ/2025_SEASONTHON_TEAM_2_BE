@@ -1,6 +1,5 @@
 package com.seasonthon.everflow.app.topic.scheduler;
 
-import com.seasonthon.everflow.app.topic.domain.Topic;
 import com.seasonthon.everflow.app.topic.domain.TopicStatus;
 import com.seasonthon.everflow.app.topic.repository.TopicRepository;
 import lombok.RequiredArgsConstructor;
@@ -9,7 +8,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -17,15 +15,25 @@ public class TopicScheduler {
 
     private final TopicRepository topicRepository;
 
-    // 매일 자정마다 실행
-    @Scheduled(cron = "0 0 0 * * ?")
+    /**
+     * 매일 00:02(KST)에 실행:
+     * - 활성 토픽이 없으면 가장 오래된 DRAFT 하나를 지금부터 3일간 ACTIVE로 전환
+     */
+    @Scheduled(cron = "0 2 0 * * *", zone = "Asia/Seoul")
     @Transactional
-    public void expireTopics() {
+    public void activateIfNone() {
         LocalDateTime now = LocalDateTime.now();
-        List<Topic> expired = topicRepository.findByStatusAndActiveUntilBefore(TopicStatus.ACTIVE, now);
 
-        for (Topic t : expired) {
-            t.expire(); // 엔티티에 expire() 같은 상태 변경 메서드 정의
-        }
+        // 이미 활성 토픽이 있으면 종료
+        boolean hasActive = topicRepository
+                .findFirstByStatusAndActiveFromLessThanEqualAndActiveUntilGreaterThanOrderByActiveFromDesc(
+                        TopicStatus.ACTIVE, now, now
+                )
+                .isPresent();
+        if (hasActive) return;
+
+        // 가장 오래된 DRAFT를 3일 활성화
+        topicRepository.findFirstByStatusOrderByIdAsc(TopicStatus.DRAFT)
+                .ifPresent(next -> next.activateAt(now, 3));
     }
 }

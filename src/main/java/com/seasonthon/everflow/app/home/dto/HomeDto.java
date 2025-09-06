@@ -1,8 +1,5 @@
 package com.seasonthon.everflow.app.home.dto;
 
-import com.seasonthon.everflow.app.bookshelf.dto.BookshelfDto;
-import java.util.List;
-
 public class HomeDto {
 
     /** 가족 친밀도(참여율) 응답 DTO */

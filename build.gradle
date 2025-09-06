@@ -22,6 +22,7 @@ configurations {
 
 repositories {
     mavenCentral()
+    google()
 }
 
 dependencies {
@@ -60,6 +61,8 @@ dependencies {
     annotationProcessor 'com.querydsl:querydsl-apt:5.0.0:jakarta'
     annotationProcessor 'jakarta.annotation:jakarta.annotation-api'
     annotationProcessor 'jakarta.persistence:jakarta.persistence-api'
+
+
 
     /* ====== 개발 편의 / 테스트 ====== */
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
