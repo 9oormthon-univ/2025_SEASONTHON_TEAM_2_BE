@@ -78,7 +78,7 @@ public class AppointmentService {
         // 5. 약속 정보 저장
         Appointment savedAppointment = appointmentRepository.save(appointment);
 
-        String link = "/api/appointments/" + savedAppointment.getId();
+        String link = "/api/appointments/" + savedAppointment.getId() + "participant";
         participants.forEach(participantUser -> {
             String contentText = String.format("%s님이 %s에게 약속을 신청했어요.", proposeUser.getNickname(), participantUser.getNickname());
             notificationService.sendNotification(participantUser, NotificationType.APPOINTMENT_ACTION, contentText, link);
