@@ -166,6 +166,12 @@ public class AppointmentService {
         // 2. 날짜/시간(LocalDateTime)을 원하는 형식의 문자열(String)으로 변환하기 위한 포맷터를 정의합니다.
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
+        List<String> participantNicknames = appointment.getParticipants().stream()
+                .map(AppointmentParticipant::getUser)
+                .filter(user -> !user.getId().equals(appointment.getProposeUser().getId()))
+                .map(User::getNickname)
+                .collect(Collectors.toList());
+
         // 3. 조회된 엔터티의 정보를 사용하여 DTO를 생성하고 반환합니다.
         return new AppointmentResponseDto.AppointmentDetailResponseDto(
                 appointment.getId(),
@@ -173,6 +179,7 @@ public class AppointmentService {
                 appointment.getStartTime().format(formatter),
                 appointment.getEndTime().format(formatter),
                 appointment.getLocation(),
+                participantNicknames,
                 appointment.getContent(),
                 appointment.getProposeUser().getNickname(),
                 appointment.getColor()

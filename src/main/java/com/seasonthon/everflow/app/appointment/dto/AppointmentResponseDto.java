@@ -42,6 +42,7 @@ public class AppointmentResponseDto{
         private String startTime;
         private String endTime;
         private String location;
+        private List<String> participants;
         private String content;
         private String proposeUserName;
         private AppointmentColor color;
