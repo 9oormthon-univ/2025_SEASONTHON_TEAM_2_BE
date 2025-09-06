@@ -54,12 +54,10 @@ public class AuthService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.USER_NOT_FOUND));
 
-        String familyCode = null;
-        if (user.getFamily() != null) {
-            familyCode = user.getFamily().getInviteCode();
-        }
+        String familyCode = (user.getFamily() != null) ? user.getFamily().getInviteCode() : null;
 
         return new UserInfoResponseDto(
+                user.getId(),
                 user.getEmail(),
                 user.getNickname(),
                 user.getProfileUrl(),
