@@ -22,45 +22,68 @@ public class S3Service {
     @Value("${cloud.aws.s3.bucket}")
     private String bucketName;
 
-    /**
-     * S3에 파일을 업로드하고, 파일의 URL을 반환합니다.
-     */
     public String uploadFile(MultipartFile multipartFile) throws IOException {
-        // 파일 이름이 중복되지 않도록 UUID를 사용합니다.
         String originalFilename = multipartFile.getOriginalFilename();
         String uniqueFilename = UUID.randomUUID().toString() + "_" + originalFilename;
-
         PutObjectRequest putObjectRequest = PutObjectRequest.builder()
                 .bucket(bucketName)
                 .key(uniqueFilename)
                 .contentType(multipartFile.getContentType())
                 .contentLength(multipartFile.getSize())
                 .build();
-
         s3Client.putObject(putObjectRequest, RequestBody.fromInputStream(multipartFile.getInputStream(), multipartFile.getSize()));
-
         return getFileUrl(uniqueFilename);
     }
 
-    /**
-     * S3에서 파일을 삭제합니다.
-     */
-    public void deleteFile(String fileName) {
+    public String uploadWithPrefix(String prefix, MultipartFile multipartFile) {
+        try {
+            String originalFilename = multipartFile.getOriginalFilename();
+            String base = originalFilename == null ? "file" : originalFilename;
+            String uniqueFilename = prefix + UUID.randomUUID() + "_" + base;
+            PutObjectRequest putObjectRequest = PutObjectRequest.builder()
+                    .bucket(bucketName)
+                    .key(uniqueFilename)
+                    .contentType(multipartFile.getContentType())
+                    .contentLength(multipartFile.getSize())
+                    .build();
+            s3Client.putObject(putObjectRequest, RequestBody.fromInputStream(multipartFile.getInputStream(), multipartFile.getSize()));
+            return getFileUrl(uniqueFilename);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void deleteFile(String key) {
         DeleteObjectRequest deleteObjectRequest = DeleteObjectRequest.builder()
                 .bucket(bucketName)
-                .key(fileName)
+                .key(key)
                 .build();
         s3Client.deleteObject(deleteObjectRequest);
     }
 
-    /**
-     * 파일의 URL을 조회합니다.
-     */
-    private String getFileUrl(String fileName) {
+    public void deleteByUrl(String fileUrl) {
+        if (fileUrl == null || fileUrl.isBlank()) return;
+        String key = extractKeyFromUrl(fileUrl);
+        if (key != null && !key.isBlank()) {
+            deleteFile(key);
+        }
+    }
+
+    private String getFileUrl(String key) {
         GetUrlRequest getUrlRequest = GetUrlRequest.builder()
                 .bucket(bucketName)
-                .key(fileName)
+                .key(key)
                 .build();
         return s3Client.utilities().getUrl(getUrlRequest).toExternalForm();
+    }
+
+    private String extractKeyFromUrl(String url) {
+        int idx = url.indexOf(".amazonaws.com/");
+        if (idx > 0) {
+            return url.substring(idx + ".amazonaws.com/".length() + url.substring(0, idx).lastIndexOf('/') - url.substring(0, idx).length());
+        }
+        int pos = url.indexOf(bucketName + "/");
+        if (pos >= 0) return url.substring(pos + (bucketName + "/").length());
+        return null;
     }
 }
