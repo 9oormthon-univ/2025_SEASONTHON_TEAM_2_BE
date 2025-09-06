@@ -75,7 +75,10 @@ public enum ErrorStatus implements BaseErrorCode {
     HOME_DATA_NOT_FOUND(HttpStatus.NOT_FOUND, "HOME4041", "최근 30일간 답변 데이터가 없습니다."),
     FAMILY_PARTICIPATION_NOT_FOUND(HttpStatus.NOT_FOUND, "HOME4042", "해당 가족의 참여 기록이 없습니다."),
     INVALID_HOME_SCOPE(HttpStatus.BAD_REQUEST, "HOME4001", "잘못된 범위(scope) 값입니다."),
-
+    // == BookShelf 관련 에러 ==
+    BOOKSHELF_INVALID_PARAMETER(HttpStatus.BAD_REQUEST,"BOOKSHELF4001", "잘못된 책장 요청입니다."),
+    BOOKSHELF_FAMILY_NOT_FOUND(HttpStatus.NOT_FOUND, "BOOKSHELF4041", "가족을 찾을 수 없습니다."),
+    BOOKSHELF_MEMBERS_NOT_FOUND(HttpStatus.NOT_FOUND, "BOOKSHELF4042", "가족 구성원이 존재하지 않습니다."),
 
 
 

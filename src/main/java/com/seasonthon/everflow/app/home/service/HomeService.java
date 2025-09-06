@@ -1,9 +1,14 @@
 package com.seasonthon.everflow.app.home.service;
 
+import com.seasonthon.everflow.app.bookshelf.dto.BookshelfDto;
+import com.seasonthon.everflow.app.bookshelf.service.BookshelfService;
+import com.seasonthon.everflow.app.global.code.status.ErrorStatus;
+import com.seasonthon.everflow.app.global.exception.GeneralException;
+import com.seasonthon.everflow.app.global.oauth.service.AuthService;
 import com.seasonthon.everflow.app.home.dto.HomeDto;
 import com.seasonthon.everflow.app.topic.repository.TopicAnswerRepository;
-import com.seasonthon.everflow.app.global.exception.GeneralException;
-import com.seasonthon.everflow.app.global.code.status.ErrorStatus;
+import com.seasonthon.everflow.app.user.domain.User;
+import com.seasonthon.everflow.app.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,21 +22,24 @@ import java.util.*;
 public class HomeService {
 
     private final TopicAnswerRepository answerRepository;
+    private final AuthService authService;
+    private final UserRepository userRepository;
+    private final BookshelfService bookshelfService;
 
     /**
      * 가족 친밀도(참여율) = 내 답변 수 / 가족 내 최대 답변 수 × 100
-     * 항상 최근 30일(LAST_30D) 기준으로 계산
+     * 기준: 최근 30일
      */
     public HomeDto.ClosenessResponse getCloseness(Long userId, Long familyId) {
         LocalDateTime from = LocalDateTime.now().minusDays(30);
 
-        // 내 답변 수 조회
+        // 내 답변 수
         long myCount = answerRepository.countSinceByUser(userId, from);
         if (myCount == 0) {
             throw new GeneralException(ErrorStatus.HOME_DATA_NOT_FOUND);
         }
 
-        // 가족 구성원별 답변 수 조회
+        // 가족 구성원별 답변 수
         List<Object[]> grouped = answerRepository.countSinceByFamilyGroup(familyId, from);
         if (grouped.isEmpty()) {
             throw new GeneralException(ErrorStatus.FAMILY_PARTICIPATION_NOT_FOUND);
@@ -50,7 +58,7 @@ public class HomeService {
             throw new GeneralException(ErrorStatus.HOME_DATA_NOT_FOUND);
         }
 
-        // 순위 계산 (동점은 동일 순위)
+        // 순위(동점 동일 순위)
         int rank = 1;
         List<Long> sorted = counts.values().stream()
                 .sorted(Comparator.reverseOrder())
@@ -65,5 +73,31 @@ public class HomeService {
         int pct = (int) Math.round((myCount * 100.0) / familyMax);
 
         return new HomeDto.ClosenessResponse(pct, myCount, familyMax, rank, familyId);
+    }
+
+    /**
+     * 가족 책장 목록(나 포함): userId, nickname, shelfColor 만 반환
+     */
+    @Transactional(readOnly = true)
+    public HomeDto.FamilySummaryResponse getFamilySummary(Long userId) {
+        Long familyId = authService.getFamilyId(userId);
+        if (familyId == null) {
+            throw new GeneralException(ErrorStatus.BOOKSHELF_FAMILY_NOT_FOUND);
+        }
+
+        List<User> members = userRepository.findAllByFamilyId(familyId);
+        if (members == null || members.isEmpty()) {
+            throw new GeneralException(ErrorStatus.BOOKSHELF_MEMBERS_NOT_FOUND);
+        }
+
+        List<HomeDto.FamilyMemberSummary> list = members.stream()
+                .map(u -> new HomeDto.FamilyMemberSummary(
+                        u.getId(),
+                        u.getNickname(),
+                        u.getShelfColor() != null ? u.getShelfColor().name() : null
+                ))
+                .toList();
+
+        return new HomeDto.FamilySummaryResponse(list);
     }
 }

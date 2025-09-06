@@ -1,19 +1,10 @@
 package com.seasonthon.everflow.app.user.domain;
 
 import com.seasonthon.everflow.app.family.domain.Family;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EntityListeners;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 import lombok.Builder;
 import lombok.Getter;
@@ -59,6 +50,10 @@ public class User {
     @Column(name = "status_type")
     private StatusType statusType; // ACTIVE, BANNED, WITHDRAWN
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "shelf_color", nullable = false)
+    private BookshelfColor shelfColor;
+
     @Column(name = "refresh_token", length = 512)
     private String refreshToken;
 
@@ -77,7 +72,15 @@ public class User {
     private Integer familyJoinAttempts;
 
     @Builder
-    public User(String oauthId, String email, String nickname, String profileUrl, RoleType roleType, SocialType socialType, LocalDateTime lastLoginAt) {
+    public User(
+            String oauthId,
+            String email,
+            String nickname,
+            String profileUrl,
+            RoleType roleType,
+            SocialType socialType,
+            LocalDateTime lastLoginAt
+    ) {
         this.oauthId = oauthId;
         this.email = email;
         this.nickname = nickname;
@@ -88,6 +91,8 @@ public class User {
         this.statusType = StatusType.ACTIVE;
         this.lastLoginAt = lastLoginAt;
         this.familyJoinAttempts = 0; // 초기 실패 횟수 0
+        // 기본은 아무 제약 없이 랜덤
+        this.shelfColor = BookshelfColor.random();
     }
 
     public boolean isWithdrawn() {
@@ -106,8 +111,26 @@ public class User {
         this.lastLoginAt = LocalDateTime.now();
     }
 
+    /**
+     * 가족 설정 시, 이미 가족 내에서 쓰고 있는 색을 최대한 피해서 색을 재배정
+     * (현재 색상이 겹치지 않으면 그대로 유지)
+     */
     public void setFamily(Family family) {
         this.family = family;
+        if (family != null) {
+            Set<BookshelfColor> usedColors = new HashSet<>();
+            if (family.getMembers() != null) {
+                for (User member : family.getMembers()) {
+                    if (member != null && member.getShelfColor() != null) {
+                        usedColors.add(member.getShelfColor());
+                    }
+                }
+            }
+            // 내 색이 비어있거나 가족 내에서 이미 사용 중이면, 겹치지 않게 다시 랜덤
+            if (this.shelfColor == null || usedColors.contains(this.shelfColor)) {
+                this.shelfColor = BookshelfColor.randomExcluding(usedColors);
+            }
+        }
     }
 
     public void resetFamilyJoinAttempts() {

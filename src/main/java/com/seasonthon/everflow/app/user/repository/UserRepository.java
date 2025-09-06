@@ -3,6 +3,7 @@ package com.seasonthon.everflow.app.user.repository;
 import com.seasonthon.everflow.app.user.domain.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<User, Long> {
@@ -21,4 +22,13 @@ public interface UserRepository extends JpaRepository<User, Long> {
     boolean existsByNickname(String nickname);
 
     Optional<User> findByRefreshToken(String refreshToken);
+
+    List<User> findAllByFamilyId(Long familyId);
+
+
+    @org.springframework.data.jpa.repository.Query(
+            "select u.shelfColor from User u where u.family.id = :familyId and u.shelfColor is not null"
+    )
+    java.util.List<com.seasonthon.everflow.app.user.domain.BookshelfColor>
+    findColorsByFamilyId(Long familyId);
 }
