@@ -44,7 +44,7 @@ public enum ErrorStatus implements BaseErrorCode {
     ACCOUNT_BANNED(HttpStatus.FORBIDDEN, "AUTH4032", "사용이 제한된 계정입니다."),
     POST_ACCESS_DENIED(HttpStatus.FORBIDDEN, "POST4033", "게시글 수정/삭제 권한이 없습니다."),
     APPLICATION_ACCESS_DENIED(HttpStatus.FORBIDDEN, "APPLICATION4034", "신청서에 대한 접근 권한이 없습니다."),
-    FAMILY_JOIN_ATTEMPT_EXCEEDED(HttpStatus.FORBIDDEN, "FAMILYJOIN4035","가족 가입 검증을 4회 이상 시도하셨습니다. 잠시 후 다시 시도해 주세요."),
+    FAMILY_JOIN_ATTEMPT_EXCEEDED(HttpStatus.FORBIDDEN, "FAMILYJOIN4035","가족 가입에 4회 연속 실패했습니다. 가입 요청을 확인해주세요."),
 
     // 404 Not Found
     NOT_FOUND(HttpStatus.NOT_FOUND, "COMMON404", "요청한 리소스를 찾을 수 없습니다."),
@@ -81,6 +81,7 @@ public enum ErrorStatus implements BaseErrorCode {
     BOOKSHELF_FAMILY_NOT_FOUND(HttpStatus.NOT_FOUND, "BOOKSHELF4041", "가족을 찾을 수 없습니다."),
     BOOKSHELF_MEMBERS_NOT_FOUND(HttpStatus.NOT_FOUND, "BOOKSHELF4042", "가족 구성원이 존재하지 않습니다."),
 
+    REQUEST_NOT_FOUND(HttpStatus.NOT_FOUND, "FAMILYJOIN4040", "가입 요청을 찾을 수 없습니다."),
 
 
 

@@ -1,12 +1,14 @@
 package com.seasonthon.everflow.app.family.service;
 
 import com.seasonthon.everflow.app.family.domain.Family;
+import com.seasonthon.everflow.app.family.domain.FamilyJoinRequest;
 import com.seasonthon.everflow.app.family.dto.FamilyCreateRequestDto;
 import com.seasonthon.everflow.app.family.dto.FamilyInfoResponseDto;
 import com.seasonthon.everflow.app.family.dto.FamilyJoinAnswerDto;
 import com.seasonthon.everflow.app.family.dto.FamilyJoinRequestDto;
 import com.seasonthon.everflow.app.family.dto.FamilyMembersResponseDto;
 import com.seasonthon.everflow.app.family.dto.FamilyVerificationResponseDto;
+import com.seasonthon.everflow.app.family.repository.FamilyJoinRequestRepository;
 import com.seasonthon.everflow.app.family.repository.FamilyRepository;
 import com.seasonthon.everflow.app.global.code.status.ErrorStatus;
 import com.seasonthon.everflow.app.global.exception.GeneralException;
@@ -29,6 +31,7 @@ public class FamilyService {
     private static final int MAX_ATTEMPTS = 4;
 
     private final FamilyRepository familyRepository;
+    private final FamilyJoinRequestRepository familyJoinRequestRepository;
     private final UserRepository userRepository;
     private final NotificationService notificationService;
 
@@ -54,7 +57,7 @@ public class FamilyService {
         familyRepository.save(family);
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public FamilyVerificationResponseDto getVerificationQuestion(Long userId, FamilyJoinRequestDto request) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.USER_NOT_FOUND));
@@ -68,13 +71,13 @@ public class FamilyService {
         Family family = familyRepository.findByInviteCode(request.getInviteCode())
                 .orElseThrow(() -> new GeneralException(ErrorStatus.FAMILY_NOT_FOUND));
 
-        // 초대 코드 요청 시 시도 횟수 리셋
         user.resetFamilyJoinAttempts();
         userRepository.save(user);
 
         return new FamilyVerificationResponseDto(family.getVerificationQuestion());
     }
 
+    @Transactional(noRollbackFor = GeneralException.class)
     public void joinFamily(Long userId, FamilyJoinAnswerDto request) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.USER_NOT_FOUND));
@@ -93,7 +96,6 @@ public class FamilyService {
 
         List<User> existingMembers = userRepository.findAllByFamilyId(family.getId());
 
-        // 검증 실패
         if (!family.getVerificationAnswer().equals(request.getVerificationAnswer())) {
             user.increaseFamilyJoinAttempts();
             userRepository.save(user);
@@ -116,7 +118,6 @@ public class FamilyService {
             throw new GeneralException(ErrorStatus.INVALID_VERIFICATION_ANSWER);
         }
 
-        // 검증 성공
         family.addMember(user);
         user.updateRole(RoleType.ROLE_USER);
         user.resetFamilyJoinAttempts();
@@ -174,5 +175,48 @@ public class FamilyService {
                 .toList();
 
         return new FamilyMembersResponseDto(family.getFamilyName(), memberInfos);
+    }
+
+    public void approveJoinRequest(Long approverId, Long requestId) {
+        FamilyJoinRequest joinRequest = familyJoinRequestRepository.findById(requestId)
+                .orElseThrow(() -> new GeneralException(ErrorStatus.REQUEST_NOT_FOUND));
+
+        Family family = joinRequest.getFamily();
+
+        User creator = family.getMembers().stream()
+                .min(Comparator.comparing(User::getCreatedAt))
+                .orElseThrow(() -> new GeneralException(ErrorStatus.FAMILY_NOT_FOUND));
+
+        if (!creator.getId().equals(approverId)) {
+            throw new GeneralException(ErrorStatus.FORBIDDEN);
+        }
+
+        User user = joinRequest.getUser();
+        family.addMember(user);
+        user.updateRole(RoleType.ROLE_USER);
+
+        joinRequest.approve();
+
+        familyJoinRequestRepository.save(joinRequest);
+        userRepository.save(user);
+        familyRepository.save(family);
+    }
+
+    public void rejectJoinRequest(Long approverId, Long requestId) {
+        FamilyJoinRequest joinRequest = familyJoinRequestRepository.findById(requestId)
+                .orElseThrow(() -> new GeneralException(ErrorStatus.REQUEST_NOT_FOUND));
+
+        Family family = joinRequest.getFamily();
+
+        User creator = family.getMembers().stream()
+                .min(Comparator.comparing(User::getCreatedAt))
+                .orElseThrow(() -> new GeneralException(ErrorStatus.FAMILY_NOT_FOUND));
+
+        if (!creator.getId().equals(approverId)) {
+            throw new GeneralException(ErrorStatus.FORBIDDEN);
+        }
+
+        joinRequest.reject();
+        familyJoinRequestRepository.save(joinRequest);
     }
 }

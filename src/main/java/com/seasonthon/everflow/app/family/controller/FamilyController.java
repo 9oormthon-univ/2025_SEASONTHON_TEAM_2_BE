@@ -81,4 +81,20 @@ public class FamilyController {
         FamilyMembersResponseDto response = familyService.getFamilyMembers(userDetails.getUserId());
         return ApiResponse.onSuccess(response);
     }
+
+    @PostMapping("/join/approve/{requestId}")
+    public ApiResponse<Void> approveJoinRequest(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable Long requestId) {
+        familyService.approveJoinRequest(userDetails.getUserId(), requestId);
+        return ApiResponse.onSuccess(null);
+    }
+
+    @PostMapping("/join/reject/{requestId}")
+    public ApiResponse<Void> rejectJoinRequest(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable Long requestId) {
+        familyService.rejectJoinRequest(userDetails.getUserId(), requestId);
+        return ApiResponse.onSuccess(null);
+    }
 }

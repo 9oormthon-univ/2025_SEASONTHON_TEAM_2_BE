@@ -35,6 +35,7 @@ public class Family {
     @Column(name = "verification_answer")
     private String verificationAnswer;
 
+    @OrderBy("createdAt ASC")   // createdAt 기준 오름차순 정렬
     @OneToMany(mappedBy = "family", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<User> members = new ArrayList<>();
 
