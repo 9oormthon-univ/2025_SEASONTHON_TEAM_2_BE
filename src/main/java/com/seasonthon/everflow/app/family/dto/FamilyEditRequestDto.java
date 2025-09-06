@@ -1,5 +1,6 @@
 package com.seasonthon.everflow.app.family.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
@@ -18,6 +19,7 @@ public class FamilyEditRequestDto {
     @Size(min = 1, max = 8)
     private String verificationAnswer;
 
+    @Schema(hidden = true)
     public boolean isAllEmpty() {
         return (familyName == null || familyName.isBlank())
                 && (verificationQuestion == null || verificationQuestion.isBlank())

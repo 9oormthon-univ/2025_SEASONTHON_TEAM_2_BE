@@ -18,6 +18,6 @@ public class FamilyMembersResponseDto {
     public static class MemberInfo {
         private String nickname;
         private String profileUrl;
-        private String email;
+        private Long id;
     }
 }

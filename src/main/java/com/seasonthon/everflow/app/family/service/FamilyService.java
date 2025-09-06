@@ -154,7 +154,7 @@ public class FamilyService {
                 .map(member -> new FamilyMembersResponseDto.MemberInfo(
                         member.getNickname(),
                         member.getProfileUrl(),
-                        member.getEmail()
+                        member.getId()   // email 대신 Long id 반환
                 ))
                 .toList();
 
