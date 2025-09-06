@@ -1,10 +1,5 @@
 server:
   port: 8443
-  ssl:
-    enabled: true
-    key-store: classpath:keystore.p12
-    key-store-password: 030304
-    key-store-type: PKCS12
 
 cloud:
   aws:
