@@ -1,7 +1,6 @@
 package com.seasonthon.everflow.app.topic.dto;
 
 import com.seasonthon.everflow.app.topic.domain.Topic;
-import com.seasonthon.everflow.app.topic.domain.TopicAnswer;
 import com.seasonthon.everflow.app.topic.domain.TopicType;
 
 import java.time.LocalDateTime;
@@ -27,20 +26,31 @@ public class TopicDto {
     public record AnswerUpdateRequest(String content) {}
 
     // 답변 응답
-    public record AnswerResponse(Long answerId, Long topicId, Long userId, String nickname, String content, LocalDateTime createdAt) {
-        public static AnswerResponse of(TopicAnswer a) {
+    public record AnswerResponse(
+            Long answerId,
+            Long topicId,
+            Long userId,
+            String nickname,
+            String profileUrl,
+            String content,
+            java.time.LocalDateTime createdAt
+    ) {
+        public static AnswerResponse of(com.seasonthon.everflow.app.topic.domain.TopicAnswer a) {
+            var user = a.getUser();
+            String profileUrl = (user != null) ? user.getProfileUrl() : null;
+            assert user != null;
             return new AnswerResponse(
                     a.getId(),
                     a.getTopic().getId(),
-                    a.getUser().getId(),
-                    a.getUser().getNickname(),
+                    user.getId(),
+                    user.getNickname(),
+                    profileUrl,
                     a.getContent(),
                     a.getCreatedAt()
             );
         }
     }
 
-    // (옵션) 토픽 + 답변 묶음
     public record TopicWithAnswersResponse(
             Long topicId, String question, LocalDateTime activeFrom, LocalDateTime activeUntil, List<AnswerResponse> answers
     ) {
