@@ -1,6 +1,7 @@
 package com.seasonthon.everflow.app.family.controller;
 
 import com.seasonthon.everflow.app.family.dto.FamilyCreateRequestDto;
+import com.seasonthon.everflow.app.family.dto.FamilyEditRequestDto;
 import com.seasonthon.everflow.app.family.dto.FamilyInfoResponseDto;
 import com.seasonthon.everflow.app.family.dto.FamilyJoinAnswerDto;
 import com.seasonthon.everflow.app.family.dto.FamilyJoinRequestDto;
@@ -112,5 +113,17 @@ public class FamilyController {
         }
         List<PendingJoinRequestDto> response = familyService.getPendingJoinRequests(userDetails.getUserId());
         return ApiResponse.onSuccess(response);
+    }
+
+    @Operation(summary = "가족 프로필 일괄 수정", description = "그룹장이 가족명/검증 질문/검증 답변을 한 번에 수정합니다.")
+    @PatchMapping("/edit")
+    public ApiResponse<FamilyInfoResponseDto> editFamily(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @Valid @RequestBody FamilyEditRequestDto request) {
+        if (userDetails == null) {
+            return ApiResponse.onFailure("AUTH401", "인증 정보가 없습니다.", null);
+        }
+        FamilyInfoResponseDto result = familyService.editFamilyProfile(userDetails.getUserId(), request);
+        return ApiResponse.onSuccess(result);
     }
 }

@@ -4,6 +4,7 @@ import com.seasonthon.everflow.app.family.domain.Family;
 import com.seasonthon.everflow.app.family.domain.FamilyJoinRequest;
 import com.seasonthon.everflow.app.family.domain.JoinStatus;
 import com.seasonthon.everflow.app.family.dto.FamilyCreateRequestDto;
+import com.seasonthon.everflow.app.family.dto.FamilyEditRequestDto;
 import com.seasonthon.everflow.app.family.dto.FamilyInfoResponseDto;
 import com.seasonthon.everflow.app.family.dto.FamilyJoinAnswerDto;
 import com.seasonthon.everflow.app.family.dto.FamilyJoinRequestDto;
@@ -21,9 +22,7 @@ import com.seasonthon.everflow.app.notification.service.NotificationService;
 import com.seasonthon.everflow.app.user.domain.RoleType;
 import com.seasonthon.everflow.app.user.domain.User;
 import com.seasonthon.everflow.app.user.repository.UserRepository;
-import java.util.Comparator;
 import java.util.List;
-import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -79,26 +78,21 @@ public class FamilyService {
     public JoinAttemptResponseDto joinFamily(Long userId, FamilyJoinAnswerDto request) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.USER_NOT_FOUND));
-
         if (user.getRoleType() != RoleType.ROLE_GUEST) {
             throw new GeneralException(ErrorStatus.FAMILY_ALREADY_EXISTS);
         }
-
         Family family = familyRepository.findByInviteCode(request.getInviteCode())
                 .orElseThrow(() -> new GeneralException(ErrorStatus.FAMILY_NOT_FOUND));
-
         int attempts = user.getFamilyJoinAttempts() == null ? 0 : user.getFamilyJoinAttempts();
         if (attempts >= MAX_ATTEMPTS) {
             upsertPendingJoinRequest(family, user, attempts + 1);
             notifyFamilyAction(family, user);
             return new JoinAttemptResponseDto(false, true, ErrorStatus.FAMILY_JOIN_ATTEMPT_EXCEEDED);
         }
-
         boolean correct = family.getVerificationAnswer().equals(request.getVerificationAnswer());
         if (!correct) {
             user.increaseFamilyJoinAttempts();
             userRepository.save(user);
-
             if (user.getFamilyJoinAttempts() >= MAX_ATTEMPTS) {
                 upsertPendingJoinRequest(family, user, user.getFamilyJoinAttempts());
                 notifyFamilyAction(family, user);
@@ -106,13 +100,11 @@ public class FamilyService {
             }
             return new JoinAttemptResponseDto(false, false, ErrorStatus.INVALID_VERIFICATION_ANSWER);
         }
-
         family.addMember(user);
         user.updateRole(RoleType.ROLE_USER);
         user.resetFamilyJoinAttempts();
         userRepository.save(user);
         familyRepository.save(family);
-
         notifyFamilyResponse(family, user);
         return new JoinAttemptResponseDto(true, false, SuccessStatus.OK);
     }
@@ -144,23 +136,30 @@ public class FamilyService {
         }
 
         boolean isCreator = family.getMembers().stream()
-                .min(Comparator
-                        .comparing(User::getCreatedAt, Comparator.nullsLast(Comparator.naturalOrder()))
-                        .thenComparing(User::getId))
+                .min(
+                        java.util.Comparator
+                                .comparing(User::getCreatedAt, java.util.Comparator.nullsLast(java.util.Comparator.naturalOrder()))
+                                .thenComparing(User::getId)
+                )
                 .map(u -> u.getId().equals(user.getId()))
                 .orElse(false);
 
         List<FamilyMembersResponseDto.MemberInfo> memberInfos = family.getMembers().stream()
-                .sorted(Comparator.comparing(User::getCreatedAt, Comparator.nullsLast(Comparator.naturalOrder())))
+                .sorted(
+                        java.util.Comparator.comparing(
+                                User::getCreatedAt,
+                                java.util.Comparator.nullsLast(java.util.Comparator.naturalOrder())
+                        )
+                )
                 .map(member -> new FamilyMembersResponseDto.MemberInfo(
                         member.getNickname(),
-                        member.getProfileUrl()
+                        member.getProfileUrl(),
+                        member.getEmail()
                 ))
                 .toList();
 
         return new FamilyMembersResponseDto(family.getFamilyName(), isCreator, memberInfos);
     }
-
 
     @Transactional(readOnly = true)
     public List<PendingJoinRequestDto> getPendingJoinRequests(Long approverId) {
@@ -171,7 +170,7 @@ public class FamilyService {
             throw new GeneralException(ErrorStatus.NOT_IN_FAMILY_YET);
         }
         var creator = family.getMembers().stream()
-                .min(Comparator.comparing(User::getCreatedAt))
+                .min(java.util.Comparator.comparing(User::getCreatedAt))
                 .orElseThrow(() -> new GeneralException(ErrorStatus.FAMILY_NOT_FOUND));
         if (!creator.getId().equals(approverId)) {
             throw new GeneralException(ErrorStatus.FORBIDDEN);
@@ -192,7 +191,7 @@ public class FamilyService {
                 .orElseThrow(() -> new GeneralException(ErrorStatus.REQUEST_NOT_FOUND));
         Family family = joinRequest.getFamily();
         var creator = family.getMembers().stream()
-                .min(Comparator.comparing(User::getCreatedAt))
+                .min(java.util.Comparator.comparing(User::getCreatedAt))
                 .orElseThrow(() -> new GeneralException(ErrorStatus.FAMILY_NOT_FOUND));
         if (!creator.getId().equals(approverId)) {
             throw new GeneralException(ErrorStatus.FORBIDDEN);
@@ -214,7 +213,7 @@ public class FamilyService {
                 .orElseThrow(() -> new GeneralException(ErrorStatus.REQUEST_NOT_FOUND));
         Family family = joinRequest.getFamily();
         var creator = family.getMembers().stream()
-                .min(Comparator.comparing(User::getCreatedAt))
+                .min(java.util.Comparator.comparing(User::getCreatedAt))
                 .orElseThrow(() -> new GeneralException(ErrorStatus.FAMILY_NOT_FOUND));
         if (!creator.getId().equals(approverId)) {
             throw new GeneralException(ErrorStatus.FORBIDDEN);
@@ -224,6 +223,46 @@ public class FamilyService {
         }
         joinRequest.reject();
         familyJoinRequestRepository.save(joinRequest);
+    }
+
+    @Transactional
+    public FamilyInfoResponseDto editFamilyProfile(Long userId, FamilyEditRequestDto req) {
+        if (req == null || req.isAllEmpty()) {
+            throw new GeneralException(ErrorStatus.BAD_REQUEST);
+        }
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new GeneralException(ErrorStatus.USER_NOT_FOUND));
+        Family family = user.getFamily();
+        if (family == null) {
+            throw new GeneralException(ErrorStatus.NOT_IN_FAMILY_YET);
+        }
+        User leader = family.getMembers().stream()
+                .min(java.util.Comparator
+                        .comparing(User::getCreatedAt, java.util.Comparator.nullsLast(java.util.Comparator.naturalOrder()))
+                        .thenComparing(User::getId))
+                .orElseThrow(() -> new GeneralException(ErrorStatus.FAMILY_NOT_FOUND));
+        if (!leader.getId().equals(userId)) {
+            throw new GeneralException(ErrorStatus.FORBIDDEN);
+        }
+        if (req.getFamilyName() != null && !req.getFamilyName().isBlank()) {
+            family.updateFamilyName(req.getFamilyName().trim());
+        }
+        boolean qProvided = req.getVerificationQuestion() != null && !req.getVerificationQuestion().isBlank();
+        boolean aProvided = req.getVerificationAnswer() != null && !req.getVerificationAnswer().isBlank();
+        if (qProvided && aProvided) {
+            family.updateVerification(req.getVerificationQuestion().trim(), req.getVerificationAnswer().trim());
+        } else if (qProvided) {
+            family.updateVerification(req.getVerificationQuestion().trim(), family.getVerificationAnswer());
+        } else if (aProvided) {
+            family.updateVerification(family.getVerificationQuestion(), req.getVerificationAnswer().trim());
+        }
+        familyRepository.save(family);
+        return new FamilyInfoResponseDto(
+                family.getInviteCode(),
+                family.getFamilyName(),
+                family.getVerificationQuestion(),
+                family.getVerificationAnswer()
+        );
     }
 
     private void upsertPendingJoinRequest(Family family, User user, int targetAttempts) {
@@ -240,10 +279,7 @@ public class FamilyService {
     private void notifyFamilyAction(Family family, User actor) {
         List<User> members = userRepository.findAllByFamilyId(family.getId());
         String link = "";
-        String contentText = String.format(
-                "%s님이 가족 가입에 %d회 연속 실패했습니다. 가입 요청을 확인해주세요.",
-                actor.getNickname(), MAX_ATTEMPTS
-        );
+        String contentText = String.format("%s님이 가족 가입에 %d회 연속 실패했습니다. 가입 요청을 확인해주세요.", actor.getNickname(), MAX_ATTEMPTS);
         members.forEach(recipient -> notificationService.sendNotification(
                 recipient, NotificationType.FAMILY_ACTION, contentText, link
         ));

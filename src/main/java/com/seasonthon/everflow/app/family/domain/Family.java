@@ -57,4 +57,10 @@ public class Family {
         int code = 100000 + random.nextInt(900000);
         return String.valueOf(code);
     }
+
+    public void updateFamilyName(String name) { this.familyName = name; }
+    public void updateVerification(String question, String answer) {
+        this.verificationQuestion = question;
+        this.verificationAnswer = answer;
+    }
 }
