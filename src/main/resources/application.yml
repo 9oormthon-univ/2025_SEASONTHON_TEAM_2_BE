@@ -44,3 +44,11 @@ springdoc:
     url: /v3/api-docs
     display-request-duration: true
     groups-order: ASC
+
+gemini:
+  baseurl: https://generativelanguage.googleapis.com
+  model: gemini-2.0-flash
+
+googleai:
+  api:
+    key: AIzaSyBhvzHlWW-_bnbnZjDcWJOkS_Dwf7uNdMk
