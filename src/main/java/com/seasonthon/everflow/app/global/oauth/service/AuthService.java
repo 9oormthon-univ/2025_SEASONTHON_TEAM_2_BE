@@ -124,4 +124,38 @@ public class AuthService {
         jwtService.updateRefreshToken(user.getEmail(), newRefreshToken);
         return new LoginResponseDto(newAccessToken, newRefreshToken);
     }
+    /**
+     * userId로 familyId 조회 (없으면 예외)
+     */
+    @Transactional(readOnly = true)
+    public Long getFamilyId(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new GeneralException(ErrorStatus.USER_NOT_FOUND));
+        if (user.getFamily() == null) {
+            throw new GeneralException(ErrorStatus.FAMILY_NOT_FOUND);
+        }
+        return user.getFamily().getId();
+    }
+
+    /**
+     * 인증 객체로 바로 familyId 조회 (미인증/가족없음 예외)
+     */
+    @Transactional(readOnly = true)
+    public Long getFamilyId(CustomUserDetails me) {
+        if (me == null) {
+            throw new GeneralException(ErrorStatus.AUTH_REQUIRED);
+        }
+        return getFamilyId(me.getUserId());
+    }
+
+    /**
+     * 인증 객체에서 userId 반환 (미인증 예외)
+     */
+    @Transactional(readOnly = true)
+    public Long getUserId(CustomUserDetails me) {
+        if (me == null) {
+            throw new GeneralException(ErrorStatus.AUTH_REQUIRED);
+        }
+        return me.getUserId();
+    }
 }
