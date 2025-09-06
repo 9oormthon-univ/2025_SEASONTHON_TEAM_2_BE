@@ -6,21 +6,72 @@ import com.seasonthon.everflow.app.notification.domain.Notification;
 import com.seasonthon.everflow.app.notification.domain.NotificationType;
 import com.seasonthon.everflow.app.notification.domain.ReadStatus;
 import com.seasonthon.everflow.app.notification.dto.NotificationResponseDto;
+import com.seasonthon.everflow.app.notification.repository.EmitterRepository;
 import com.seasonthon.everflow.app.notification.repository.NotificationRepository;
 import com.seasonthon.everflow.app.user.domain.User;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class NotificationService {
 
+    private static final Long DEFAULT_TIMEOUT = 60L * 1000 * 60;
+
     private final NotificationRepository notificationRepository;
+    private final EmitterRepository emitterRepository;
+
+    public SseEmitter subscribe(Long userId) {
+        String emitterId = userId + "_" + System.currentTimeMillis();
+        SseEmitter emitter = new SseEmitter(DEFAULT_TIMEOUT);
+        emitterRepository.save(emitterId, emitter);
+
+        emitter.onCompletion(() -> emitterRepository.deleteById(emitterId));
+        emitter.onTimeout(() -> emitterRepository.deleteById(emitterId));
+
+        // 503 에러 방지를 위한 더미 이벤트 전송
+        sendToClient(emitter, emitterId, "EventStream Created. [userId=" + userId + "]");
+
+        return emitter;
+    }
+
+    public void sendNotification(User recipient, NotificationType type, String content, String link) {
+        Notification notification = Notification.builder()
+                .user(recipient)
+                .notificationType(type)
+                .contentText(content)
+                .link(link)
+                .build();
+        notificationRepository.save(notification);
+
+        Map<String, SseEmitter> emitters = emitterRepository.findAllByUserId(String.valueOf(recipient.getId()));
+        emitters.forEach((emitterId, emitter) -> {
+            NotificationResponseDto.NotificationGetResponseDto responseDto = mapToNotificationGetResponseDto(notification);
+            sendToClient(emitter, emitterId, responseDto);
+        });
+    }
+
+    private void sendToClient(SseEmitter emitter, String emitterId, Object data) {
+        try {
+            emitter.send(SseEmitter.event()
+                    .id(emitterId)
+                    .name("sse")
+                    .data(data));
+        } catch (IOException e) {
+            emitterRepository.deleteById(emitterId);
+            log.error("SSE 연결 오류!", e);
+        }
+    }
 
     @Transactional
     public NotificationResponseDto.ReadResponseDto readNotification(Long notificationId, Long userId) {
@@ -92,16 +143,6 @@ public class NotificationService {
             case ANSWER_RESPONSE -> "오늘의 질문 알림";
             default -> "기타알림";
         };
-    }
-
-    public void sendNotification(User recipient, NotificationType type, String content, String link) {
-        Notification notification = Notification.builder()
-                .user(recipient)
-                .notificationType(type)
-                .contentText(content)
-                .link(link)
-                .build();
-        notificationRepository.save(notification);
     }
 
 }
