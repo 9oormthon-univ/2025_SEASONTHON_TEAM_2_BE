@@ -21,27 +21,31 @@ public interface TopicAnswerRepository extends JpaRepository<TopicAnswer, Long> 
     // 가족이 작성한 활성 토픽 답변
     @Query("""
       select ta from TopicAnswer ta
+      join fetch ta.user u
       where ta.topic.id = :topicId
-        and ta.user.family.id = :familyId
+        and u.family.id = :familyId
+      order by ta.createdAt asc
     """)
     List<TopicAnswer> findFamilyAnswersByTopic(@Param("topicId") Long topicId, @Param("familyId") Long familyId);
 
     @Query("""
       select ta from TopicAnswer ta
-      where ta.topic.id = :topicId
-        and ta.user.family.id = :familyId
-    """)
-    List<TopicAnswer> findFamilyAnswers(@Param("topicId") Long activeTopicId, @Param("familyId") Long familyId);
-
-    // 가족이 과거에 남긴 모든 답변(토픽 섞임)
-    @Query("""
-      select ta from TopicAnswer ta
-      where ta.user.family.id = :familyId
+      join fetch ta.user u
+      where ta.topic.id = :activeTopicId
+        and u.family.id = :familyId
       order by ta.createdAt asc
     """)
-    List<TopicAnswer> findAllByFamilyId(@Param("familyId") Long familyId);
+    List<TopicAnswer> findFamilyAnswers(@Param("activeTopicId") Long activeTopicId, @Param("familyId") Long familyId);
 
-    // --- 홈 참여율 계산에 쓰는 집계용 (있으면 사용 / 없으면 생략 가능) ---
+    // 가족이 남긴 모든 답변(토픽 섞임) - N+1 방지
+    @Query("""
+      select ta from TopicAnswer ta
+      join fetch ta.user u
+      join fetch ta.topic t
+      where u.family.id = :familyId
+      order by t.activeFrom desc, ta.createdAt asc
+    """)
+    List<TopicAnswer> findAllByFamilyId(@Param("familyId") Long familyId);
 
     long countByUserId(Long userId);
 
