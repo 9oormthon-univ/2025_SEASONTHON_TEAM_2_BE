@@ -16,8 +16,8 @@ cloud:
     s3:
       bucket: ${S3_BUCKETNAME:ecrname}
     credentials:
-      access-key: ${AWS_ACCESS_KEY_ID}
-      secret-key: ${AWS_SECRET_ACCESS_KEY}
+      access-key: ${AWS_ACCESS_KEY_ID:}
+      secret-key: ${AWS_SECRET_ACCESS_KEY:}
       profile: ${AWS_PROFILE:everflowbucket}
 
 spring:
