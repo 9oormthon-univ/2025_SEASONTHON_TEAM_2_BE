@@ -90,7 +90,7 @@ public class AuthService {
         User user = User.builder()
                 .email(email)
                 .nickname(safeNickname)
-                .profileUrl("https://media.licdn.com/dms/image/v2/C560BAQFmuLSyL1nlPA/company-logo_200_200/company-logo_200_200/0/1678231359043/github_logo?e=1759968000&v=beta&t=nMBlFBz6z5C7V4K8nC6nXKWaxJoSFDbcaFRbewwR2Z4")
+                .profileUrl("https://www.svgrepo.com/show/452030/avatar-default.svg")
                 .oauthId("test-apple-" + UUID.randomUUID())
                 .socialType(SocialType.APPLE)
                 .roleType(RoleType.ROLE_GUEST)
