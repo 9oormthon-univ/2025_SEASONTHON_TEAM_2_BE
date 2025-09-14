@@ -10,11 +10,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -25,7 +21,7 @@ public class MemoController {
     private final MemoService memoService;
 
     /* 로그인한 사용자의 가족 메모 조회 (가족당 1장, 항상 존재) */
-    @Operation(summary = "우리 가족 메모 조회", description = "로그인한 사용자가 속한 가족의 공유 메모를 조회합니다. " + "가족당 1장만 존재하며, 조회 시 메모가 없으면 자동으로 생성됩니다.")
+    @Operation(summary = "우리 가족 메모 조회", description = "로그인한 사용자가 속한 가족의 메모를 조회합니다. " + "가족당 1장만 존재하며, 조회 시 메모가 없으면 자동으로 생성됩니다.")
     @GetMapping
     public ApiResponse<MemoDto> getMemo(@AuthenticationPrincipal CustomUserDetails me) {
         return ApiResponse.onSuccess(
@@ -34,7 +30,7 @@ public class MemoController {
     }
 
     /* 메모 수정 (본문만 수정, 버전은 서버 자동 관리) */
-    @Operation(summary = "우정리 가족 메모 수정", description = "로그인한 사용자가 속한 가족의 공유 메모 본문을 수정합니다. " + "버전은 서버에서 자동 관리되며, 본문만 수정 가능합니다. " + "최대 800자까지 입력할 수 있습니다.")
+    @Operation(summary = "우리 가족 메모 수정", description = "로그인한 사용자가 속한 가족의 메모 본문을 수정합니다. " + "버전은 서버에서 자동 관리되며, 최종 본문 길이는 최대 800자입니다.")
     @PatchMapping
     public ApiResponse<MemoDto> updateMemo(@AuthenticationPrincipal CustomUserDetails me,
                                            @RequestBody @Valid UpdateMemoRequestDto req) {

@@ -55,7 +55,8 @@ public class Memo {
     }
 
     // ---- behavior ----
-    public void applyContent(String newContent) {
+    public void applyContent(String newContent, Long editorUserId) {
         this.content = (newContent == null) ? "" : newContent;
+        this.updatedBy = editorUserId;
     }
 }
