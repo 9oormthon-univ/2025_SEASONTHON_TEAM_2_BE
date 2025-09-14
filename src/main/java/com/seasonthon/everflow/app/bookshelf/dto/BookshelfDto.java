@@ -1,12 +1,9 @@
 package com.seasonthon.everflow.app.bookshelf.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-
-import java.time.LocalDateTime;
 import java.util.List;
 
 public class BookshelfDto {
-
     // 내 책장/가족 책장 공통 응답: 질문 + 해당 사용자의 답변
     public record ShelfItem(
             Long questionId,
