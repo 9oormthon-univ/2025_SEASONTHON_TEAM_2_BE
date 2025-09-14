@@ -318,4 +318,9 @@ public class FamilyService {
                         recipient, NotificationType.FAMILY_RESPONSE, contentText, link
                 ));
     }
+
+    @Transactional(readOnly = true)
+    public boolean doesFamilyExistByCode(String inviteCode) {
+        return familyRepository.existsByInviteCode(inviteCode);
+    }
 }

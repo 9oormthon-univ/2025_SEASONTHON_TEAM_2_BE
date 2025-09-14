@@ -12,4 +12,5 @@ public interface FamilyRepository extends JpaRepository<Family, Long> {
      * @return 해당 초대 코드에 해당하는 Family 객체 (Optional)
      */
     Optional<Family> findByInviteCode(String inviteCode);
+    boolean existsByInviteCode(String inviteCode);
 }
