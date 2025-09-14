@@ -1,6 +1,7 @@
 package com.seasonthon.everflow.app.bookshelf.controller;
 
-import com.seasonthon.everflow.app.bookshelf.dto.BookshelfDto;
+import com.seasonthon.everflow.app.bookshelf.dto.BookshelfUserViewDto;
+import com.seasonthon.everflow.app.bookshelf.dto.BookshelfAnswersUpsertRequestDto;
 import com.seasonthon.everflow.app.bookshelf.service.BookshelfService;
 import com.seasonthon.everflow.app.global.code.dto.ApiResponse;
 import com.seasonthon.everflow.app.global.oauth.domain.CustomUserDetails;
@@ -25,7 +26,7 @@ public class BookshelfController {
     // 내 책장 조회
     @Operation(summary = "내 책장 조회", description = "기본 질문 15개 + 내 답변을 조회합니다.")
     @GetMapping("/me")
-    public ApiResponse<BookshelfDto.UserShelfResponse> getMyShelf(@AuthenticationPrincipal CustomUserDetails me) {
+    public ApiResponse<BookshelfUserViewDto> getMyShelf(@AuthenticationPrincipal CustomUserDetails me) {
         Long meId = authService.getUserId(me);
         return ApiResponse.onSuccess(bookshelfService.getMyShelf(meId));
     }
@@ -33,7 +34,7 @@ public class BookshelfController {
     // 특정 사용자 책장 조회 (가족만)
     @Operation(summary = "가족 책장 조회", description = "같은 가족 구성원의 책장을 조회합니다.")
     @GetMapping("/{userId}")
-    public ApiResponse<BookshelfDto.UserShelfResponse> getUserShelf(
+    public ApiResponse<BookshelfUserViewDto> getUserShelf(
             @AuthenticationPrincipal CustomUserDetails me,
             @PathVariable Long userId
     ) {
@@ -79,7 +80,7 @@ public class BookshelfController {
     @PatchMapping("/me")
     public ApiResponse<Void> writeMyAnswers(
             @AuthenticationPrincipal CustomUserDetails me,
-            @RequestBody BookshelfDto.WriteAnswersRequest req
+            @RequestBody BookshelfAnswersUpsertRequestDto req
     ) {
         Long meId = authService.getUserId(me);
         bookshelfService.writeMyAnswers(meId, req);

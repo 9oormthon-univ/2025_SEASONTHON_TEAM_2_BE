@@ -2,7 +2,9 @@ package com.seasonthon.everflow.app.bookshelf.service;
 
 import com.seasonthon.everflow.app.bookshelf.domain.BookshelfAnswer;
 import com.seasonthon.everflow.app.bookshelf.domain.BookshelfQuestion;
-import com.seasonthon.everflow.app.bookshelf.dto.BookshelfDto;
+import com.seasonthon.everflow.app.bookshelf.dto.BookshelfUserViewDto;
+import com.seasonthon.everflow.app.bookshelf.dto.BookshelfEntryDto;
+import com.seasonthon.everflow.app.bookshelf.dto.BookshelfAnswersUpsertRequestDto;
 import com.seasonthon.everflow.app.bookshelf.repository.BookshelfAnswerRepository;
 import com.seasonthon.everflow.app.bookshelf.repository.BookshelfQuestionRepository;
 import com.seasonthon.everflow.app.global.code.status.ErrorStatus;
@@ -27,24 +29,24 @@ public class BookshelfService {
     private final AuthService authService;
 
     /** 내 책장 조회 (기본 질문 15개 + 내 답변 매핑) */
-    public BookshelfDto.UserShelfResponse getMyShelf(Long meId) {
+    public BookshelfUserViewDto getMyShelf(Long meId) {
         User me = userRepository.findById(meId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.USER_NOT_FOUND));
         return buildUserShelf(me);
     }
 
     /** 남의 책장 조회: 반드시 같은 가족만 허용 */
-    public BookshelfDto.UserShelfResponse getUserShelf(Long requesterId, Long targetUserId) {
+    public BookshelfUserViewDto getUserShelf(Long requesterId, Long targetUserId) {
         User requester = userRepository.findById(requesterId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.USER_NOT_FOUND));
         User target = userRepository.findById(targetUserId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.USER_NOT_FOUND));
 
-        // 가족 여부 확인: AuthService를 통해 가족 ID 조회 (없으면 내부에서 예외 발생)
+        // 가족 여부 확인: AuthService를 통해 가족 ID 조회
         Long requesterFamilyId = authService.getFamilyId(requesterId);
         Long targetFamilyId = authService.getFamilyId(targetUserId);
 
-        // 같은 가족이 아니면 접근 불가 처리 (전용 에러코드가 없다면 FAMILY_NOT_FOUND로 통일)
+        // 같은 가족이 아니면 접근 불가 처리
         if (!Objects.equals(requesterFamilyId, targetFamilyId)) {
             throw new GeneralException(ErrorStatus.FAMILY_NOT_FOUND);
         }
@@ -55,7 +57,7 @@ public class BookshelfService {
     /** 내 답변 일괄 저장/수정 (null 답변 허용) */
 
     @Transactional
-    public void writeMyAnswers(Long meId, BookshelfDto.WriteAnswersRequest req) {
+    public void writeMyAnswers(Long meId, BookshelfAnswersUpsertRequestDto req) {
         User me = userRepository.findById(meId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.USER_NOT_FOUND));
 
@@ -74,7 +76,7 @@ public class BookshelfService {
             throw new GeneralException(ErrorStatus.BOOKSHELF_INVALID_PARAMETER);
         }
         // 요청에 알 수 없는 questionId가 포함되었는지 검증
-        for (BookshelfDto.WriteAnswersRequest.AnswerPair p : req.items()) {
+        for (BookshelfAnswersUpsertRequestDto.ItemDto p : req.items()) {
             if (!qmap.containsKey(p.questionId())) {
                 throw new GeneralException(ErrorStatus.BOOKSHELF_INVALID_PARAMETER);
             }
@@ -82,7 +84,7 @@ public class BookshelfService {
 
         // 2) 클라이언트가 보낸 값 맵으로
         Map<Long, String> payload = new HashMap<>();
-        for (BookshelfDto.WriteAnswersRequest.AnswerPair p : req.items()) {
+        for (BookshelfAnswersUpsertRequestDto.ItemDto p : req.items()) {
             payload.put(p.questionId(), p.answer()); // answer 는 null 허용
         }
 
@@ -106,7 +108,7 @@ public class BookshelfService {
     }
 
     // 내부 도우미: 질문 + 해당 유저 답변을 합쳐 ShelfResponse 생성
-    private BookshelfDto.UserShelfResponse buildUserShelf(User user) {
+    private BookshelfUserViewDto buildUserShelf(User user) {
         List<BookshelfQuestion> questions = questionRepository.findAllByIsActiveTrueOrderByIdAsc();
         List<Long> qids = questions.stream().map(BookshelfQuestion::getId).toList();
 
@@ -114,7 +116,7 @@ public class BookshelfService {
         answerRepository.findAllByUserIdAndQuestionIdIn(user.getId(), qids)
                 .forEach(a -> answerMap.put(a.getQuestion().getId(), a));
 
-        List<BookshelfDto.ShelfItem> items = new ArrayList<>(questions.size());
+        List<BookshelfEntryDto> items = new ArrayList<>(questions.size());
         java.time.LocalDateTime lastUpdatedAt = null;
         for (BookshelfQuestion q : questions) {
             BookshelfAnswer a = answerMap.get(q.getId());
@@ -127,13 +129,13 @@ public class BookshelfService {
                 }
             }
 
-            items.add(new BookshelfDto.ShelfItem(
+            items.add(new BookshelfEntryDto(
                     q.getId(),
                     q.getQuestionText(),
                     a != null ? a.getAnswer() : null
             ));
         }
 
-        return new BookshelfDto.UserShelfResponse(user.getId(), user.getNickname(), lastUpdatedAt, items);
+        return new BookshelfUserViewDto(user.getId(), user.getNickname(), lastUpdatedAt, items);
     }
 }
