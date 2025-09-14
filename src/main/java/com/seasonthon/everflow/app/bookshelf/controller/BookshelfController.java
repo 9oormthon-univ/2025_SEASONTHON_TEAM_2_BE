@@ -76,7 +76,7 @@ public class BookshelfController {
                     )
             )
     )
-    @PatchMapping("/bookshelf/me")
+    @PatchMapping("/me")
     public ApiResponse<Void> writeMyAnswers(
             @AuthenticationPrincipal CustomUserDetails me,
             @RequestBody BookshelfDto.WriteAnswersRequest req

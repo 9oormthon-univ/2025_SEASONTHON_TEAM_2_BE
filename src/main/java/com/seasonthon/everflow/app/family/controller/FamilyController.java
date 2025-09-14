@@ -126,4 +126,11 @@ public class FamilyController {
         FamilyInfoResponseDto result = familyService.editFamilyProfile(userDetails.getUserId(), request);
         return ApiResponse.onSuccess(result);
     }
+
+    @Operation(summary = "가족 코드 존재 여부 확인", description = "가족 코드가 유효한지 true/false로 반환합니다.")
+    @GetMapping("/verify")
+    public ApiResponse<Boolean> verifyFamilyCode(@RequestParam("code") String inviteCode) {
+        boolean exists = familyService.doesFamilyExistByCode(inviteCode);
+        return ApiResponse.onSuccess(exists);
+    }
 }
