@@ -8,7 +8,6 @@ public class MemoMapper {
                 memo.getId(),
                 memo.getFamilyId(),
                 memo.getContent(),
-                memo.getVersion(),
                 memo.getUpdatedAt()
         );
     }

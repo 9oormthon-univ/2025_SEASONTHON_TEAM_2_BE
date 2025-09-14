@@ -2,7 +2,6 @@ package com.seasonthon.everflow.app.memo.service;
 import com.seasonthon.everflow.app.global.exception.GeneralException;
 import com.seasonthon.everflow.app.global.code.status.ErrorStatus;
 
-import com.seasonthon.everflow.app.global.code.dto.ApiResponse;
 import com.seasonthon.everflow.app.memo.domain.Memo;
 import com.seasonthon.everflow.app.memo.dto.MemoDto;
 import com.seasonthon.everflow.app.memo.repository.MemoRepository;
@@ -32,22 +31,26 @@ public class MemoService {
                 });
     }
 
+    /* 버전은 클라이언트에서 받지 않고 서버에서 자동 관리 */
     @Transactional
-    public MemoDto update(Long userId, Integer expectedVersion, String content) {
+    public MemoDto update(Long userId, String content) {
         Long familyId = resolveFamilyId(userId);
         Memo memo = memoRepository.findByFamilyId(familyId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.MEMO_NOT_FOUND));
-        if (memo.getVersion() != expectedVersion) {
-            throw new GeneralException(
-                ErrorStatus.VERSION_CONFLICT
-            );
-        }
+
+        /* 본문 길이 검증 (800자 초과 금지) */
         if (content != null && content.length() > 800) {
             throw new GeneralException(ErrorStatus.MEMO_CONTENT_TOO_LONG);
         }
+
+        /* 내용 반영: @Version으로 버전은 자동 증가됨 */
         memo.applyContent(content);
-        Memo saved = memoRepository.save(memo);
-        return MemoMapper.toDto(saved);
+        try {
+            Memo saved = memoRepository.save(memo);
+            return MemoMapper.toDto(saved);
+        } catch (jakarta.persistence.OptimisticLockException e) {
+            throw new GeneralException(ErrorStatus.VERSION_CONFLICT);
+        }
     }
 
     private Long resolveFamilyId(Long userId) {
