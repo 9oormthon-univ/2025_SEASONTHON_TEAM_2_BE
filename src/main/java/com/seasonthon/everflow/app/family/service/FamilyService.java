@@ -9,6 +9,7 @@ import com.seasonthon.everflow.app.family.dto.FamilyInfoResponseDto;
 import com.seasonthon.everflow.app.family.dto.FamilyJoinAnswerDto;
 import com.seasonthon.everflow.app.family.dto.FamilyJoinRequestDto;
 import com.seasonthon.everflow.app.family.dto.FamilyMembersResponseDto;
+import com.seasonthon.everflow.app.family.dto.FamilyVerificationDetailResponseDto;
 import com.seasonthon.everflow.app.family.dto.FamilyVerificationResponseDto;
 import com.seasonthon.everflow.app.family.dto.JoinAttemptResponseDto;
 import com.seasonthon.everflow.app.family.dto.PendingJoinRequestDto;
@@ -24,7 +25,9 @@ import com.seasonthon.everflow.app.notification.service.NotificationService;
 import com.seasonthon.everflow.app.user.domain.RoleType;
 import com.seasonthon.everflow.app.user.domain.User;
 import com.seasonthon.everflow.app.user.repository.UserRepository;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -322,5 +325,31 @@ public class FamilyService {
     @Transactional(readOnly = true)
     public boolean doesFamilyExistByCode(String inviteCode) {
         return familyRepository.existsByInviteCode(inviteCode);
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<FamilyVerificationDetailResponseDto> getFamilyDetailByCode(String inviteCode) {
+        return familyRepository.findByInviteCode(inviteCode).map(family -> {
+            List<User> members = userRepository.findAllByFamilyId(family.getId());
+
+            User leader = members.stream()
+                    .min(Comparator
+                            .comparing(User::getCreatedAt, Comparator.nullsLast(Comparator.naturalOrder()))
+                            .thenComparing(User::getId))
+                    .orElse(null);
+
+            if (leader == null) return null;
+
+            List<String> profileUrls = members.stream()
+                    .map(User::getProfileUrl)
+                    .toList();
+
+            return new FamilyVerificationDetailResponseDto(
+                    family.getFamilyName(),
+                    leader.getNickname(),
+                    profileUrls,
+                    members.size()
+            );
+        });
     }
 }

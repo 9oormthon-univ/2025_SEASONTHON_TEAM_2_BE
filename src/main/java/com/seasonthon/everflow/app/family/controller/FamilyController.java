@@ -6,6 +6,7 @@ import com.seasonthon.everflow.app.family.dto.FamilyInfoResponseDto;
 import com.seasonthon.everflow.app.family.dto.FamilyJoinAnswerDto;
 import com.seasonthon.everflow.app.family.dto.FamilyJoinRequestDto;
 import com.seasonthon.everflow.app.family.dto.FamilyMembersResponseDto;
+import com.seasonthon.everflow.app.family.dto.FamilyVerificationDetailResponseDto;
 import com.seasonthon.everflow.app.family.dto.FamilyVerificationResponseDto;
 import com.seasonthon.everflow.app.family.dto.JoinAttemptResponseDto;
 import com.seasonthon.everflow.app.family.dto.PendingJoinRequestDto;
@@ -17,6 +18,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.List;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -132,5 +134,21 @@ public class FamilyController {
     public ApiResponse<Boolean> verifyFamilyCode(@RequestParam("code") String inviteCode) {
         boolean exists = familyService.doesFamilyExistByCode(inviteCode);
         return ApiResponse.onSuccess(exists);
+    }
+
+    @Operation(
+            summary = "가족 코드 상세 정보 확인",
+            description = "가족코드에 해당되는 가족이 존재할 경우, 가족명/가족장/프로필이미지/구성원 수를 반환합니다."
+    )
+    @GetMapping("/verify/detail")
+    public ApiResponse<FamilyVerificationDetailResponseDto> getFamilyDetailByCode(@RequestParam("code") String inviteCode) {
+        Optional<FamilyVerificationDetailResponseDto> result = familyService.getFamilyDetailByCode(inviteCode);
+
+        return result.map(ApiResponse::onSuccess)
+                .orElseGet(() -> ApiResponse.onFailure(
+                        ErrorStatus.FAMILY_NOT_FOUND.getCode(),
+                        "존재하지 않는 가족코드입니다.",
+                        null
+                ));
     }
 }
