@@ -60,11 +60,16 @@ public enum ErrorStatus implements BaseErrorCode {
     GEMINI_BAD_RESPONSE(HttpStatus.BAD_GATEWAY, "GEMINI5022", "Gemini 응답 형식이 올바르지 않습니다."),
     GEMINI_CALL_FAILED(HttpStatus.SERVICE_UNAVAILABLE, "GEMINI5031", "Gemini 호출에 실패했습니다."),
     GEMINI_EMPTY_QUESTION(HttpStatus.UNPROCESSABLE_ENTITY, "GEMINI4221", "생성된 질문이 비어 있습니다."),
-
     // == Memo 관련 에러 ==
     MEMO_NOT_FOUND(HttpStatus.NOT_FOUND, "MEMO4041", "공유 메모를 찾을 수 없습니다."),
     MEMO_UPDATE_FORBIDDEN(HttpStatus.FORBIDDEN, "MEMO4031", "해당 메모를 수정할 권한이 없습니다."),
     MEMO_CONTENT_TOO_LONG(HttpStatus.BAD_REQUEST, "MEMO4001", "메모 내용은 800자를 초과할 수 없습니다."),
+    // == Custom Bookshelf 관련 에러 ==
+    BOOKSHELF_QUESTION_NOT_FOUND(HttpStatus.NOT_FOUND, "BOOKSHELF4043", "해당 책장 질문을 찾을 수 없습니다."),
+    BOOKSHELF_ANSWER_NOT_FOUND(HttpStatus.NOT_FOUND, "BOOKSHELF4044", "해당 책장 답변을 찾을 수 없습니다."),
+    BOOKSHELF_QUESTION_CREATE_FORBIDDEN(HttpStatus.FORBIDDEN, "BOOKSHELF4031", "책장 질문을 생성할 권한이 없습니다."),
+    BOOKSHELF_QUESTION_DELETE_FORBIDDEN(HttpStatus.FORBIDDEN, "BOOKSHELF4032", "책장 질문을 삭제할 권한이 없습니다."),
+    BOOKSHELF_ANSWER_UPDATE_FORBIDDEN(HttpStatus.FORBIDDEN, "BOOKSHELF4033", "책장 답변을 수정할 권한이 없습니다."),
 
     REQUEST_NOT_FOUND(HttpStatus.NOT_FOUND, "FAMILYJOIN4040", "가입 요청을 찾을 수 없습니다."),
 
