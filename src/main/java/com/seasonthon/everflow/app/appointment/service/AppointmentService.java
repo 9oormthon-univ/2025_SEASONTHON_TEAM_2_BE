@@ -146,6 +146,7 @@ public class AppointmentService {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
         return appointmentsOnDate.stream()
+                .filter(appointment -> appointment.getStatus() == AcceptStatus.ACCEPTED)
                 .map(appointment -> new AppointmentResponseDto.AppointmentDateResponseDto(
                         appointment.getId(),
                         appointment.getName(),
@@ -153,7 +154,7 @@ public class AppointmentService {
                         appointment.getEndTime().format(formatter),
                         appointment.getLocation(),
                         appointment.getProposeUser().getNickname(),
-                        (long) appointment.getParticipants().size()-1,
+                        (long) appointment.getParticipants().size(),
                         appointment.getColor()
                 ))
                 .collect(Collectors.toList());
@@ -230,6 +231,16 @@ public class AppointmentService {
         if (!contentText.isEmpty()) {
             notificationService.sendNotification(proposer, NotificationType.APPOINTMENT_RESPONSE, contentText, link);
         }
+
+        // 모든 참여자가 수락했는지 확인
+        Appointment appointment = participant.getAppointment();
+        boolean allAccepted = appointment.getParticipants().stream()
+                .allMatch(p -> p.getAcceptStatus() == AcceptStatus.ACCEPTED);
+
+        if (allAccepted) {
+            appointment.updateStatus(AcceptStatus.ACCEPTED);
+        }
+
 
         return new AppointmentResponseDto.MessageResponseDto("참여 상태가 성공적으로 변경되었습니다.");
     }
