@@ -7,7 +7,6 @@ import com.seasonthon.everflow.app.user.dto.UserNicknameUpdateDto;
 import com.seasonthon.everflow.app.user.dto.UserProfileImageResponseDto;
 import com.seasonthon.everflow.app.user.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -27,7 +26,8 @@ public class UserController {
     @PatchMapping("users/me/nickname")
     public ApiResponse<Void> updateNickname(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @Valid @RequestBody UserNicknameUpdateDto request) {
+            @Valid @RequestBody UserNicknameUpdateDto request
+    ) {
         if (userDetails == null) {
             return ApiResponse.onFailure("AUTH401", "인증 정보가 없습니다.", null);
         }
