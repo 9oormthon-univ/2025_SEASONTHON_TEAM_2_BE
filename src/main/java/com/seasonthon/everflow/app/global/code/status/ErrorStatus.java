@@ -19,6 +19,7 @@ public enum ErrorStatus implements BaseErrorCode {
     INVALID_IMAGE_FORMAT(HttpStatus.BAD_REQUEST, "FILE40018", "지원하지 않는 이미지 형식입니다. (jpg, png만 지원)"),
     IMAGE_SIZE_EXCEEDED(HttpStatus.BAD_REQUEST, "FILE40019", "이미지 크기가 너무 큽니다. (최대 5MB)"),
     INVALID_VERIFICATION_ANSWER(HttpStatus.BAD_REQUEST, "VERIFICATION40020", "가족 검증 질문 또는 답변이 틀렸습니다."),
+    SELF_APPOINTMENT_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "APPOINTMENT4001", "자기 자신에게 약속을 제안할 수 없습니다."),
     // == 파라미터 관련 에러 ==
     INVALID_MONTH_PARAMETER(HttpStatus.BAD_REQUEST, "PARAMETER4001", "월(month)은 1에서 12 사이의 값이어야 합니다."),
     INVALID_DAY_PARAMETER(HttpStatus.BAD_REQUEST, "PARAMETER4002", "유효하지 않은 일(day)입니다."),

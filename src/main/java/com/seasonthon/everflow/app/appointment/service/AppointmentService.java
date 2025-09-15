@@ -46,6 +46,10 @@ public class AppointmentService {
         User proposeUser = userRepository.findById(proposeUserId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.USER_NOT_FOUND));
 
+        if (requestDto.getParticipantUserIds().contains(proposeUserId)) {
+            throw new GeneralException(ErrorStatus.SELF_APPOINTMENT_NOT_ALLOWED);
+        }
+
         // 2. Appointment 엔터티 생성
         Appointment appointment = Appointment.builder()
                 .proposeUser(proposeUser)
