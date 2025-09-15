@@ -7,6 +7,8 @@ import lombok.NoArgsConstructor;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 @Entity
 @Table(name = "custom_bookshelf_answer", uniqueConstraints = {
@@ -20,32 +22,34 @@ public class CustomBookshelfAnswer {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(optional = false)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "question_id", nullable = false)
     private CustomBookshelfQuestion question;
 
-    @ManyToOne(optional = false)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Column(nullable = false)
+    @Column(name = "content", columnDefinition = "TEXT", nullable = true)
     private String content;
 
-    @Column(name = "created_at", nullable = false)
+    @CreationTimestamp
+    @Column(name = "created_at", nullable = false, updatable = false, columnDefinition = "datetime(6)")
     private LocalDateTime createdAt;
 
-    @Column(name = "updated_at")
+    @UpdateTimestamp
+    @Column(name = "updated_at", columnDefinition = "datetime(6)")
     private LocalDateTime updatedAt;
 
-    public CustomBookshelfAnswer(CustomBookshelfQuestion question, User user, String content) {
-        this.question = question;
-        this.user = user;
-        this.content = content;
-        this.createdAt = LocalDateTime.now();
+    public static CustomBookshelfAnswer create(CustomBookshelfQuestion question, User user, String content) {
+        CustomBookshelfAnswer a = new CustomBookshelfAnswer();
+        a.question = question;
+        a.user = user;
+        a.content = (content == null || content.isBlank()) ? null : content;
+        return a;
     }
 
     public void updateContent(String newContent) {
-        this.content = newContent;
-        this.updatedAt = LocalDateTime.now();
+        this.content = (newContent == null || newContent.isBlank()) ? null : newContent;
     }
 }
