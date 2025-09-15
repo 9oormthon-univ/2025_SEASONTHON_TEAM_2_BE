@@ -1,50 +1,113 @@
 package com.seasonthon.everflow.app.bookshelf.domain;
 
+import com.seasonthon.everflow.app.family.domain.Family;
+import com.seasonthon.everflow.app.user.domain.User;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
-@Entity
-@Table(name = "family_bookshelf")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Entity
+@Table(name = "family_bookshelf") // ← DB 테이블명이 이거면 맞추세요
+@EntityListeners(AuditingEntityListener.class)
 public class BookshelfQuestion {
 
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "question_id")
     private Long id;
 
     @Column(name = "question_text", nullable = false, length = 500, unique = true)
     private String questionText;
 
+    // TEXT / SELECT (당장은 문자열로 유지, 나중에 enum으로 뺄 수 있음)
     @Column(name = "question_type", nullable = false, length = 20)
-    private String questionType; // TEXT 또는 SELECT
+    private String questionType;
 
+    // BASE / CUSTOM
+    @Enumerated(EnumType.STRING)
+    @Column(name = "scope", nullable = false, length = 16)
+    private QuestionScope scope;
+
+    // SELECT일 때 옵션(콤마/JSON 등)
     @Column(name = "options", length = 2000)
-    private String options;      // SELECT일 때 콤마/JSON 등으로 저장
+    private String options;
 
     @Column(name = "is_active", nullable = false)
     private boolean isActive = true;
 
-    @Column(name = "created_at")
+    // 커스텀 질문 메타
+    @ManyToOne(fetch = FetchType.LAZY, optional = true)
+    @JoinColumn(name = "family_id")
+    private Family family;        // BASE일 때는 null
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = true)
+    @JoinColumn(name = "created_by")
+    private User createdBy;       // BASE일 때는 null
+
+    // 감사 필드 (스프링 데이터 JPA Auditing)
+    @CreatedDate
+    @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
+    @LastModifiedDate
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    @Builder
-    private BookshelfQuestion(String questionText, String questionType, String options, Boolean isActive) {
+    @Builder(access = AccessLevel.PRIVATE)
+    private BookshelfQuestion(String questionText,
+                              String questionType,
+                              String options,
+                              boolean isActive,
+                              QuestionScope scope,
+                              Family family,
+                              User createdBy) {
         this.questionText = questionText;
         this.questionType = questionType;
         this.options = options;
-        if (isActive != null) this.isActive = isActive;
-        this.createdAt = LocalDateTime.now();
+        this.isActive = isActive;
+        this.scope = scope;
+        this.family = family;
+        this.createdBy = createdBy;
     }
 
-    public void updateOptions(String options) { this.options = options; }
-    public void deactivate() { this.isActive = false; this.updatedAt = LocalDateTime.now(); }
+    // 팩토리 메서드: 기본 질문
+    public static BookshelfQuestion base(String text, String type, String options) {
+        return BookshelfQuestion.builder()
+                .questionText(text)
+                .questionType(type)
+                .options(options)
+                .isActive(true)
+                .scope(QuestionScope.BASE)
+                .family(null)
+                .createdBy(null)
+                .build();
+    }
+
+    // 팩토리 메서드: 커스텀 질문
+    public static BookshelfQuestion custom(String text, String type, String options,
+                                           Family family, User createdBy) {
+        return BookshelfQuestion.builder()
+                .questionText(text)
+                .questionType(type)
+                .options(options)
+                .isActive(true)
+                .scope(QuestionScope.CUSTOM)
+                .family(family)
+                .createdBy(createdBy)
+                .build();
+    }
+
+    public void updateOptions(String options) {
+        this.options = options;
+    }
+
+    public void deactivate() {
+        this.isActive = false;
+    }
 }

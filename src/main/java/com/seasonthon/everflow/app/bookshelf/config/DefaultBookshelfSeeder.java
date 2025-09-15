@@ -57,12 +57,11 @@ public class DefaultBookshelfSeeder implements CommandLineRunner {
                     },
                     () -> {
                         boolean isMbti = q.equals(MBTI_TEXT);
-                        repository.save(BookshelfQuestion.builder()
-                                .questionText(q)
-                                .questionType(isMbti ? "SELECT" : "TEXT")
-                                .options(isMbti ? MBTI_OPTIONS : null)
-                                .isActive(true)
-                                .build());
+                        repository.save(BookshelfQuestion.base(
+                                q,
+                                isMbti ? "SELECT" : "TEXT",
+                                isMbti ? MBTI_OPTIONS : null
+                        ));
                     }
             );
         }

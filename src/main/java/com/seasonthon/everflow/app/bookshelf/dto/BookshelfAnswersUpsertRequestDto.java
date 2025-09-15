@@ -10,7 +10,7 @@ public record BookshelfAnswersUpsertRequestDto(
 ) {
     /* 질문-답 1쌍 DTO */
     public record ItemDto(
-            @Schema(description = "질문 ID(1~15 순번)", example = "1")
+            @Schema(description = "질문 ID(PK, 기본:1~15 / 커스텀: DB에서 생성된 값)", example = "1")
             Long questionId,
 
             @Schema(description = "답변(없으면 null 가능)", example = "우리 가족 구호는 '화이팅'")
