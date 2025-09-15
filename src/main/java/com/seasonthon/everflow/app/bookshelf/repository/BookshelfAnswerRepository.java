@@ -13,4 +13,6 @@ public interface BookshelfAnswerRepository extends JpaRepository<BookshelfAnswer
 
     // 특정 사용자 + 여러 질문 id에 대한 답변들
     List<BookshelfAnswer> findAllByUserIdAndQuestionIdIn(Long userId, List<Long> questionIds);
+
+    long deleteByQuestionId(Long questionId);
 }
