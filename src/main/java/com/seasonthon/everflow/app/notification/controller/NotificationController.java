@@ -9,9 +9,11 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jdk.jfr.Description;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.util.List;
 
@@ -22,6 +24,13 @@ import java.util.List;
 public class NotificationController {
 
     private final NotificationService notificationService;
+
+    @Operation(summary = "알림 구독", description = "실시간 알림을 받기 위해 SSE 연결을 설정합니다. (text/event-stream)")
+    @GetMapping(value = "/subscribe", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public SseEmitter subscribe(@AuthenticationPrincipal CustomUserDetails userDetails) {
+        Long userId = userDetails.getUserId();
+        return notificationService.subscribe(userId);
+    }
 
     @Operation(summary = "알림 읽기", description = "알림상태를 읽기로 전환합니다.")
     @PatchMapping("/{notificationId}/read")
