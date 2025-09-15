@@ -88,8 +88,8 @@ public class FamilyService {
                 .orElseThrow(() -> new GeneralException(ErrorStatus.FAMILY_NOT_FOUND));
         int attempts = user.getFamilyJoinAttempts() == null ? 0 : user.getFamilyJoinAttempts();
         if (attempts >= MAX_ATTEMPTS) {
-            upsertPendingJoinRequest(family, user, attempts + 1);
-            notifyFamilyAction(family, user);
+            FamilyJoinRequest pendingRequest = upsertPendingJoinRequest(family, user, attempts + 1);
+            notifyFamilyAction(family, user, pendingRequest.getId());
             return new JoinAttemptResponseDto(false, true, ErrorStatus.FAMILY_JOIN_ATTEMPT_EXCEEDED);
         }
         boolean correct = family.getVerificationAnswer().equals(request.getVerificationAnswer());
@@ -97,8 +97,8 @@ public class FamilyService {
             user.increaseFamilyJoinAttempts();
             userRepository.save(user);
             if (user.getFamilyJoinAttempts() >= MAX_ATTEMPTS) {
-                upsertPendingJoinRequest(family, user, user.getFamilyJoinAttempts());
-                notifyFamilyAction(family, user);
+                FamilyJoinRequest pendingRequest = upsertPendingJoinRequest(family, user, user.getFamilyJoinAttempts());
+                notifyFamilyAction(family, user, pendingRequest.getId());
                 return new JoinAttemptResponseDto(false, true, ErrorStatus.FAMILY_JOIN_ATTEMPT_EXCEEDED);
             }
             return new JoinAttemptResponseDto(false, false, ErrorStatus.INVALID_VERIFICATION_ANSWER);
@@ -288,7 +288,7 @@ public class FamilyService {
         );
     }
 
-    private void upsertPendingJoinRequest(Family family, User user, int targetAttempts) {
+    private FamilyJoinRequest upsertPendingJoinRequest(Family family, User user, int targetAttempts) {
         FamilyJoinRequest jr = familyJoinRequestRepository
                 .findByFamilyIdAndUserId(family.getId(), user.getId())
                 .orElseGet(() -> FamilyJoinRequest.builder().family(family).user(user).build());
@@ -296,12 +296,12 @@ public class FamilyService {
         while (jr.getAttempts() < targetAttempts) {
             jr.increaseAttempts();
         }
-        familyJoinRequestRepository.save(jr);
+        return familyJoinRequestRepository.save(jr);
     }
 
-    private void notifyFamilyAction(Family family, User actor) {
+    private void notifyFamilyAction(Family family, User actor, Long requestId) {
         List<User> members = userRepository.findAllByFamilyId(family.getId());
-        String link = "";
+        String link = "/family/pending/" + requestId;
         String contentText = String.format("%s님이 가족 가입에 %d회 연속 실패했습니다. 가입 요청을 확인해주세요.", actor.getNickname(), MAX_ATTEMPTS);
         members.forEach(recipient -> notificationService.sendNotification(
                 recipient, NotificationType.FAMILY_ACTION, contentText, link
