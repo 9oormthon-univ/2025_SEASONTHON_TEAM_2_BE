@@ -25,6 +25,8 @@ import com.seasonthon.everflow.app.notification.service.NotificationService;
 import com.seasonthon.everflow.app.user.domain.RoleType;
 import com.seasonthon.everflow.app.user.domain.User;
 import com.seasonthon.everflow.app.user.repository.UserRepository;
+import com.seasonthon.everflow.app.memo.domain.Memo;
+import com.seasonthon.everflow.app.memo.repository.MemoRepository;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -44,6 +46,7 @@ public class FamilyService {
     private final UserRepository userRepository;
     private final NotificationService notificationService;
     private final NotificationRepository notificationRepository;
+    private final MemoRepository memoRepository;
 
     public void createFamily(Long userId, FamilyCreateRequestDto request) {
         User user = userRepository.findById(userId)
@@ -57,9 +60,17 @@ public class FamilyService {
                 .verificationQuestion(request.getVerificationQuestion())
                 .verificationAnswer(request.getVerificationAnswer())
                 .build();
+        /* 가족 구성원 추가 및 역할 업데이트 */
         family.addMember(user);
         user.updateRole(RoleType.ROLE_USER);
-        familyRepository.save(family);
+
+        /* 가족 먼저 저장 (ID 확보) */
+        Family savedFamily = familyRepository.save(family);
+
+        /* 가족 생성 시 공유 메모 자동 생성 (가족당 1장) */
+        if (!memoRepository.existsByFamilyId(savedFamily.getId())) {
+            memoRepository.save(Memo.create(savedFamily.getId(), user.getId()));
+        }
     }
 
     @Transactional
@@ -106,11 +117,16 @@ public class FamilyService {
             }
             return new JoinAttemptResponseDto(false, false, ErrorStatus.INVALID_VERIFICATION_ANSWER);
         }
+        /* 기존 가족(레거시)에 메모가 없을 경우 보강 생성 */
         family.addMember(user);
         user.updateRole(RoleType.ROLE_USER);
         user.resetFamilyJoinAttempts();
         userRepository.save(user);
         familyRepository.save(family);
+        /* 기존 가족(레거시)에 메모가 없을 경우 보강 생성 */
+        if (!memoRepository.existsByFamilyId(family.getId())) {
+            memoRepository.save(Memo.create(family.getId(), user.getId()));
+        }
         notifyFamilyResponse(family, user);
         return new JoinAttemptResponseDto(true, false, SuccessStatus.OK);
     }
@@ -216,12 +232,17 @@ public class FamilyService {
             throw new GeneralException(ErrorStatus.REQUEST_NOT_FOUND);
         }
         User user = joinRequest.getUser();
+        /* 메모 기능 도입 이전에 생성된 가족의 경우 보강 생성 */
         family.addMember(user);
         user.updateRole(RoleType.ROLE_USER);
         joinRequest.approve();
         familyJoinRequestRepository.save(joinRequest);
         userRepository.save(user);
         familyRepository.save(family);
+        /* 메모 기능 도입 이전에 생성된 가족의 경우 보강 생성 */
+        if (!memoRepository.existsByFamilyId(family.getId())) {
+            memoRepository.save(Memo.create(family.getId(), user.getId()));
+        }
     }
 
     public void rejectJoinRequest(Long approverId, Long requestId) {
