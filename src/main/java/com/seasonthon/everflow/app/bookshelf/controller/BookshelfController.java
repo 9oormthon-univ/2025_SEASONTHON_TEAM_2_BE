@@ -6,8 +6,8 @@ import com.seasonthon.everflow.app.bookshelf.service.BookshelfService;
 import com.seasonthon.everflow.app.global.code.dto.ApiResponse;
 import com.seasonthon.everflow.app.global.oauth.domain.CustomUserDetails;
 import com.seasonthon.everflow.app.global.oauth.service.AuthService;
-import com.seasonthon.everflow.app.bookshelf.service.CustomBookshelfService;
 import com.seasonthon.everflow.app.bookshelf.dto.BookshelfEntryDto;
+import com.seasonthon.everflow.app.bookshelf.dto.CustomBookshelfQuestionCreateRequestDto;
 import jakarta.validation.Valid;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -25,7 +25,6 @@ public class BookshelfController {
 
     private final BookshelfService bookshelfService;
     private final AuthService authService;
-    private final CustomBookshelfService customBookshelfService;
 
     // 내 책장 조회
     @Operation(summary = "내 책장 조회", description = "기본 질문 + 가족 커스텀 질문을 모두 포함해, 각 질문에 대한 나의 답변을 함께 조회합니다.")
@@ -51,10 +50,10 @@ public class BookshelfController {
     @PostMapping("/custom-questions")
     public ApiResponse<BookshelfEntryDto> createCustomQuestion(
             @AuthenticationPrincipal CustomUserDetails me,
-            @org.springframework.web.bind.annotation.RequestBody @Valid com.seasonthon.everflow.app.bookshelf.dto.CustomBookshelfQuestionCreateRequestDto req
+            @RequestBody @Valid CustomBookshelfQuestionCreateRequestDto req
     ) {
         Long meId = authService.getUserId(me);
-        return ApiResponse.onSuccess(customBookshelfService.createQuestion(meId, req));
+        return ApiResponse.onSuccess(bookshelfService.createCustomQuestion(meId, req));
     }
 
     // 가족 커스텀 질문 삭제
@@ -65,7 +64,7 @@ public class BookshelfController {
             @PathVariable Long questionId
     ) {
         Long meId = authService.getUserId(me);
-        customBookshelfService.deleteQuestion(meId, questionId);
+        bookshelfService.deleteCustomQuestion(meId, questionId);
         return ApiResponse.onSuccess(null);
     }
 
