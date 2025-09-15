@@ -46,6 +46,10 @@ public class AppointmentService {
         User proposeUser = userRepository.findById(proposeUserId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.USER_NOT_FOUND));
 
+        if (requestDto.getParticipantUserIds().contains(proposeUserId)) {
+            throw new GeneralException(ErrorStatus.SELF_APPOINTMENT_NOT_ALLOWED);
+        }
+
         // 2. Appointment 엔터티 생성
         Appointment appointment = Appointment.builder()
                 .proposeUser(proposeUser)
@@ -108,6 +112,7 @@ public class AppointmentService {
 
         // 3. flatMap을 사용하여 각 약속의 기간에 포함되는 모든 날짜를 추출
         List<String> daysWithAppointments = appointments.stream()
+                .filter(appointment -> appointment.getStatus() == AcceptStatus.ACCEPTED)
                 .flatMap(appointment -> {
                     LocalDate startDate = appointment.getStartTime().toLocalDate();
                     LocalDate endDate = appointment.getEndTime().toLocalDate();
