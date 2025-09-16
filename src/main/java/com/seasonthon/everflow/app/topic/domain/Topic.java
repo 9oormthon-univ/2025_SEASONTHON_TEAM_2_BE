@@ -17,23 +17,22 @@ public class Topic {
     private Long id;
 
     @Column(nullable = false, length = 2000)
-    private String question;                // 오늘의 질문 문구
+    private String question;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private TopicStatus status;             // DRAFT / ACTIVE / EXPIRED
+    private TopicStatus status;
 
     @Column(name = "active_from", nullable = false)
-    private LocalDateTime activeFrom;       // 활성 시작(포함)
+    private LocalDateTime activeFrom;
 
     @Column(name = "active_until", nullable = false)
-    private LocalDateTime activeUntil;      // 비활성 시작(미포함) = from + 3일
+    private LocalDateTime activeUntil;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "topic_type", nullable = false)
-    private TopicType topicType;            // CASUAL / CLOSER / DEEP
+    private TopicType topicType;
 
-    // DB에 저장하지 않는 조회용 캐시 필드
     @Transient
     private Integer cachedDaysLeft;
 
@@ -46,49 +45,36 @@ public class Topic {
         this.topicType = type;
     }
 
-    /** 활성 상태로 전환 */
     public void activate() {
         this.status = TopicStatus.ACTIVE;
     }
 
-    /** 질문 문구 수정 */
     public void updateQuestion(String q) {
         if (q != null) this.question = q;
     }
 
-    /** 만료 처리 */
     public void expire() {
         this.status = TopicStatus.EXPIRED;
-        this.cachedDaysLeft = 0; // 조회 캐시도 함께 0으로
+        this.cachedDaysLeft = 0;
     }
 
-    /** 오늘 기준 남은 일수 계산 함수(음수 방지) */
     private int calculateDaysLeft() {
         return (int) Math.max(0,
                 ChronoUnit.DAYS.between(LocalDate.now(), this.activeUntil.toLocalDate()));
     }
 
-    /**
-     * 조회용 남은 일수(캐시 사용)
-     * - 캐시가 없으면 즉시 계산해서 반환
-     */
+
     public int getDaysLeft() {
         return (cachedDaysLeft != null) ? cachedDaysLeft : calculateDaysLeft();
     }
 
-    /**
-     * 남은 일수를 즉시 재계산하여 캐시에 반영하고 값을 반환
-     * - 서비스 조회 직전에 호출해서 최신 값으로 응답하고 싶을 때 사용
-     */
+
     public int refreshRemainingDays() {
         this.cachedDaysLeft = calculateDaysLeft();
         return this.cachedDaysLeft;
     }
 
-    /**
-     * 지정된 시작시각부터 'days'일 동안 활성화로 전환
-     * (activeFrom/activeUntil을 함께 세팅)
-     */
+
     public void activateAt(LocalDateTime from, int days) {
         if (from == null) from = LocalDateTime.now();
         if (days <= 0) days = 3;

@@ -1,7 +1,7 @@
 package com.seasonthon.everflow.app.topic.scheduler;
 
 import com.seasonthon.everflow.app.topic.repository.TopicRepository;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -16,7 +16,6 @@ public class TopicExpiryScheduler {
 
     private final TopicRepository topicRepository;
 
-    /** 매일 00:00 (KST) 기준으로 activeUntil이 지난 토픽들을 만료 처리 */
     @Transactional
     @Scheduled(cron = "0 0 0 * * *", zone = "Asia/Seoul")
     public void expireOutdatedTopics() {

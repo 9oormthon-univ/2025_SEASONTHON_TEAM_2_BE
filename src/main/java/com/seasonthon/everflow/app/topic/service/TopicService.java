@@ -35,7 +35,6 @@ public class TopicService {
     private final NotificationService notificationService;
     private final GeminiService geminiService;
 
-    // == 내부 유틸: 토픽 활성 여부 ==
     private boolean isActive(Topic t) {
         LocalDateTime now = LocalDateTime.now();
         return t.getStatus() == TopicStatus.ACTIVE
@@ -43,7 +42,6 @@ public class TopicService {
                 && t.getActiveUntil().isAfter(now);
     }
 
-    // == [관리자] 새 토픽 등록 (기본 3일 활성) ==
     @Transactional
     public TopicResponse createTopic(TopicCreateRequest req) {
         LocalDateTime from = (req.activeFrom() != null) ? req.activeFrom() : LocalDateTime.now();
@@ -55,14 +53,13 @@ public class TopicService {
                 .question(req.question())
                 .activeFrom(from)
                 .activeUntil(until)
-                .type(type)   // @Builder 생성자 파라미터명이 type
+                .type(type)
                 .build();
 
         topic.activate();
         return TopicResponse.of(topicRepository.save(topic));
     }
 
-    // == [관리자] 토픽 문구 수정 ==
     @Transactional
     public TopicResponse updateTopic(Long topicId, TopicUpdateRequest req) {
         Topic t = topicRepository.findById(topicId)
@@ -71,7 +68,6 @@ public class TopicService {
         return TopicResponse.of(t);
     }
 
-    // == 현재 활성 토픽 조회 (응답 직전 남은 일수 계산) ==
     public TopicResponse getCurrentActiveTopic() {
         LocalDateTime now = LocalDateTime.now();
 
@@ -81,14 +77,11 @@ public class TopicService {
                 )
                 .orElseThrow(() -> new GeneralException(ErrorStatus.TOPIC_NOT_FOUND));
 
-        // 응답 직전 남은 일수 캐시 갱신(저장 X, 조회만 최신화)
         t.refreshRemainingDays();
 
         return TopicResponse.of(t);
     }
 
-    // == [사용자] 활성 토픽에 내 답변 생성 ==
-    // 이미 답변이 있으면 예외(수정 API 사용)
     @Transactional
     public AnswerResponse createAnswer(Long topicId, Long userId, AnswerCreateRequest req) {
         Topic topic = topicRepository.findById(topicId)
@@ -97,7 +90,6 @@ public class TopicService {
             throw new GeneralException(ErrorStatus.TOPIC_NOT_ACTIVE);
         }
 
-        // 중복 방지: 기존 답변 존재 시 예외 (정책 유지)
         answerRepository.findByTopicIdAndUserId(topicId, userId)
                 .ifPresent(a -> { throw new GeneralException(ErrorStatus.ANSWER_ALREADY_EXISTS); });
 
@@ -108,7 +100,6 @@ public class TopicService {
                 .content(req.content())
                 .build();
 
-        // 가족 알림 발송 (본인 제외)
         if (user.getFamily() != null) {
             List<User> familyMembers = userRepository.findAllByFamilyId(user.getFamily().getId());
             String link = "/api/topics/" + topicId + "/answers/family";
@@ -127,7 +118,6 @@ public class TopicService {
         return AnswerResponse.of(answerRepository.save(a));
     }
 
-    // == [사용자] 활성 토픽에 내 답변 수정 ==
     @Transactional
     public AnswerResponse updateAnswer(Long topicId, Long userId, AnswerUpdateRequest req) {
         Topic t = topicRepository.findById(topicId)
@@ -142,7 +132,6 @@ public class TopicService {
         return AnswerResponse.of(a);
     }
 
-    // == 특정 토픽의 모든 답변(공개) ==
     public List<AnswerResponse> getTopicAnswers(Long topicId) {
         return answerRepository.findAllByTopicId(topicId)
                 .stream()
@@ -150,7 +139,6 @@ public class TopicService {
                 .toList();
     }
 
-    // == (활성 토픽) 가족 답변 목록 ==
     public List<AnswerResponse> getFamilyAnswers(Long familyId) {
         Topic current = topicRepository.findFirstByStatusAndActiveFromLessThanEqualAndActiveUntilGreaterThanOrderByActiveFromDesc(
                 TopicStatus.ACTIVE, LocalDateTime.now(), LocalDateTime.now()
@@ -162,7 +150,6 @@ public class TopicService {
                 .toList();
     }
 
-    // == (특정 토픽) 가족 답변 목록 ==
     public List<AnswerResponse> getFamilyAnswersByTopic(Long topicId, Long familyId) {
         return answerRepository.findFamilyAnswersByTopic(topicId, familyId)
                 .stream()
@@ -170,7 +157,6 @@ public class TopicService {
                 .toList();
     }
 
-    // == 가족이 답변 남긴 토픽 목록 + 총 개수 ==
     public FamilyAnsweredTopicsResponse getFamilyAnsweredTopics(Long familyId) {
         List<TopicAnswer> raws = answerRepository.findAllByFamilyId(familyId);
 
@@ -189,21 +175,19 @@ public class TopicService {
         return new FamilyAnsweredTopicsResponse(topics, topics.size());
     }
 
-    // == [관리자/스케줄러] Gemini로 질문 생성하여 3일 활성 토픽 등록 ==
     @Transactional
-    public TopicResponse createDailyTopicFromGemini(TopicType type) {
-        // 1) 제미나이로 질문 생성
-        String question = geminiService.generateDailyQuestion(type);
+    public TopicResponse createDailyTopicFromGemini(TopicType type, List<String> recentQuestions) {
 
-        // 2) 3일 활성 기간으로 저장
+        String question = geminiService.generateDailyQuestion(type, recentQuestions);
+
         LocalDateTime from = LocalDateTime.now();
         LocalDateTime until = from.plusDays(3);
 
         Topic topic = Topic.builder()
-                .question(question)   // ★ 여기 고침
+                .question(question)
                 .activeFrom(from)
                 .activeUntil(until)
-                .type(type)           // @Builder 파라미터명이 type
+                .type(type)
                 .build();
 
         return TopicResponse.of(topicRepository.save(topic));

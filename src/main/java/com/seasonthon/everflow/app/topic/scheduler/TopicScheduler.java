@@ -15,24 +15,21 @@ public class TopicScheduler {
 
     private final TopicRepository topicRepository;
 
-    /**
-     * 매일 00:02(KST)에 실행:
-     * - 활성 토픽이 없으면 가장 오래된 DRAFT 하나를 지금부터 3일간 ACTIVE로 전환
-     */
-    @Scheduled(cron = "0 2 0 * * *", zone = "Asia/Seoul")
     @Transactional
+    @Scheduled(cron = "0 2 0 * * *", zone = "Asia/Seoul")
     public void activateIfNone() {
         LocalDateTime now = LocalDateTime.now();
 
-        // 이미 활성 토픽이 있으면 종료
         boolean hasActive = topicRepository
                 .findFirstByStatusAndActiveFromLessThanEqualAndActiveUntilGreaterThanOrderByActiveFromDesc(
                         TopicStatus.ACTIVE, now, now
                 )
                 .isPresent();
-        if (hasActive) return;
 
-        // 가장 오래된 DRAFT를 3일 활성화
+        if (hasActive) {
+            return;
+        }
+
         topicRepository.findFirstByStatusOrderByIdAsc(TopicStatus.DRAFT)
                 .ifPresent(next -> next.activateAt(now, 3));
     }

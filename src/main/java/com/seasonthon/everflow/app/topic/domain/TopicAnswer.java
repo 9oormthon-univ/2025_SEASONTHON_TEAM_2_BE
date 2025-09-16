@@ -20,7 +20,7 @@ public class TopicAnswer {
     private Topic topic;
 
     @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "user_id", nullable = false)
-    private User user;                      // user.getFamily() 로 가족 식별
+    private User user;
 
     @Column(nullable = false, length = 4000)
     private String content;
