@@ -35,7 +35,7 @@ public class TopicAnswer {
     private LocalDateTime updatedAt;
 
     @Builder
-    private TopicAnswer(Topic topic, User user, String content) {
+    private TopicAnswer(Topic topic, User user, String content, Long familyId) {
         this.topic = topic;
         this.user = user;
         this.content = content;
