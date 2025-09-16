@@ -16,9 +16,10 @@ public class TopicExpiryScheduler {
 
     private final TopicRepository topicRepository;
 
-    /** 매일 00:00 (KST) 기준으로 activeUntil이 지난 토픽들을 만료 처리 */
     @Transactional
-    @Scheduled(cron = "0 0 0 * * *", zone = "Asia/Seoul")
+
+    @Scheduled(cron = "*/8 * * * * *", zone = "Asia/Seoul")
+    //@Scheduled(cron = "0 0 0 * * *", zone = "Asia/Seoul")
     public void expireOutdatedTopics() {
         LocalDateTime now = LocalDateTime.now();
         int updated = topicRepository.bulkExpire(now);

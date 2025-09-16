@@ -12,13 +12,10 @@ import java.util.Optional;
 
 public interface TopicAnswerRepository extends JpaRepository<TopicAnswer, Long> {
 
-    // 단건
     Optional<TopicAnswer> findByTopicIdAndUserId(Long topicId, Long userId);
 
-    // 특정 토픽 전체 답변
     List<TopicAnswer> findAllByTopicId(Long topicId);
 
-    // 가족이 작성한 활성 토픽 답변
     @Query("""
       select ta from TopicAnswer ta
       join fetch ta.user u
@@ -37,7 +34,6 @@ public interface TopicAnswerRepository extends JpaRepository<TopicAnswer, Long> 
     """)
     List<TopicAnswer> findFamilyAnswers(@Param("activeTopicId") Long activeTopicId, @Param("familyId") Long familyId);
 
-    // 가족이 남긴 모든 답변(토픽 섞임) - N+1 방지
     @Query("""
       select ta from TopicAnswer ta
       join fetch ta.user u

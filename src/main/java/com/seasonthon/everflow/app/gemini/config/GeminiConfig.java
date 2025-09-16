@@ -18,7 +18,7 @@ public class GeminiConfig {
     ) {
         return RestClient.builder()
                 .baseUrl(baseUrl)
-                .defaultHeader("x-goog-api-key", apiKey)  // 또는 쿼리파라미터로 ?key= 사용 가능
+                .defaultHeader("x-goog-api-key", apiKey)
                 .defaultHeader("Content-Type", "application/json")
                 .defaultHeader("Accept", "application/json")
                 .build();

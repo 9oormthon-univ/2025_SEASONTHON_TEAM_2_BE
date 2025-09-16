@@ -13,7 +13,9 @@ import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestClientException;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -21,39 +23,28 @@ public class GeminiService {
 
     private final GeminiInterface geminiInterface;
 
-    @Value("${gemini.model:gemini-2.0-flash}")
+    @Value("${gemini.model:gemini-1.5-flash-001}")
     private String defaultModel;
 
-    /**
-     * (고수준) 토픽 타입에 맞춰 오늘의 질문 1개 생성
-     * - CASUAL(레벨1), CLOSER(레벨2), DEEP(레벨3)
-     * - 출력: 순수 질문 문장 1개 (따옴표/번호/불릿 없이)
-     */
-    public String generateDailyQuestion(TopicType type) {
-        String prompt = buildQuestionPrompt(type);
+    public String generateDailyQuestion(TopicType type, List<String> recentQuestions) {
+        String prompt = buildQuestionPrompt(type, recentQuestions);
         String raw = getCompletion(prompt, defaultModel);
         return sanitizeQuestion(raw);
     }
 
-    /**
-     * (저수준) 프롬프트 텍스트를 그대로 모델에 보내 결과 텍스트를 받아온다.
-     */
     public String getCompletion(String prompt, String model) {
-        GeminiRequestDto request = new GeminiRequestDto(prompt);
+        GeminiRequestDto.GenerationConfig config = new GeminiRequestDto.GenerationConfig(0.9f);
+        GeminiRequestDto request = new GeminiRequestDto(prompt, config);
         final GeminiResponseDto response;
         try {
             response = geminiInterface.getCompletion(model, request);
         } catch (ResourceAccessException e) {
-            // 네트워크 타임아웃/연결 문제
             throw new GeneralException(ErrorStatus.GEMINI_TIMEOUT);
         } catch (HttpStatusCodeException e) {
-            // 4xx/5xx 등 HTTP 상태 코드 오류
             throw new GeneralException(ErrorStatus.GEMINI_HTTP_ERROR);
         } catch (RestClientException e) {
-            // 위에 매핑되지 않은 나머지 RestClient 예외
             throw new GeneralException(ErrorStatus.GEMINI_CALL_FAILED);
         } catch (RuntimeException e) {
-            // 예기치 못한 런타임 예외
             throw new GeneralException(ErrorStatus.GEMINI_CALL_FAILED);
         }
 
@@ -70,107 +61,60 @@ public class GeminiService {
                 .orElseThrow(() -> new GeneralException(ErrorStatus.GEMINI_BAD_RESPONSE));
     }
 
-    /**
-     * 모델 응답을 한 줄의 깔끔한 질문으로 정제:
-     * - 첫 줄만 사용
-     * - 양쪽 따옴표/백틱 제거
-     * - 불릿/번호/접두어(Level …, 레벨 …, Q:, 1. 등) 제거
-     * - 45자 초과 시 공백 기준으로 자르고 ? 보장
-     */
     private String sanitizeQuestion(String raw) {
-        if (raw == null) throw new GeneralException(ErrorStatus.GEMINI_EMPTY_QUESTION);
-
-        // 첫 줄만
-        String line = raw.strip().split("\\R", 2)[0];
-
-        // 주변 따옴표/백틱 제거
-        if ((line.startsWith("\"") && line.endsWith("\"")) ||
-                (line.startsWith("“") && line.endsWith("”")) ||
-                (line.startsWith("'") && line.endsWith("'")) ||
-                (line.startsWith("`") && line.endsWith("`"))) {
-            line = line.substring(1, line.length() - 1);
+        if (raw == null || raw.isBlank()) {
+            throw new GeneralException(ErrorStatus.GEMINI_EMPTY_QUESTION);
         }
-
-        // 불릿/번호/접두어 제거
-        line = line
-                .replaceFirst("^[•\\-*\\u2022\\u2043\\u2219]\\s*", "")
-                .replaceFirst("^\\d+\\s*[\\).:]\\s*", "")
-                .replaceFirst("^(?i)Q\\s*[:\\-]\\s*", "")
-                .replaceFirst("^\\(?.?Level\\s*\\d+\\)?\\s*[:\\-]\\s*", "")
-                .replaceFirst("^레벨\\s*\\d+\\s*[:,\\-]\\s*", "")
-                .replaceFirst("^\\(?.?TopicType\\s*[:\\-].*?\\)\\s*", "")
-                .replaceFirst("^\\([^)]*\\)\\s*", "")
-                .strip();
-
-        // 길이 제한: 최대 45자. 단어 중간이 아닌 공백 기준으로 잘라냄.
-        final int MAX = 45;
-        if (line.length() > MAX) {
-            int cut = line.lastIndexOf(' ', MAX - 1);
-            if (cut >= 20) {
-                line = line.substring(0, cut).strip();
-            } else {
-                line = line.substring(0, MAX).strip();
-            }
+        String cleaned = raw.strip();
+        if ((cleaned.startsWith("\"") && cleaned.endsWith("\"")) ||
+                (cleaned.startsWith("“") && cleaned.endsWith("”"))) {
+            cleaned = cleaned.substring(1, cleaned.length() - 1);
         }
-
-        // 끝이 물음표가 아니면 ? 보장 (마침표 제거 후)
-        if (!line.endsWith("?")) {
-            line = line.replaceAll("[.]+$", "").strip() + "?";
+        if (!cleaned.endsWith("?")) {
+            cleaned = cleaned.replaceAll("[.]$", "").strip() + "?";
         }
-
-        return line;
+        if (cleaned.length() > 50) {
+            cleaned = cleaned.substring(0, 50).strip() + "?";
+        }
+        return cleaned;
     }
 
-    /**
-     * 토픽 타입을 레벨로 매핑하여 프롬프트 구성
-     * - %% 이스케이프(80%%/20%%) 적용됨 (String#formatted 사용)
-     */
-    private String buildQuestionPrompt(TopicType type) {
-        int level = switch (type) {
-            case CASUAL -> 1;
-            case CLOSER -> 2;
-            case DEEP -> 3;
+    private String buildQuestionPrompt(TopicType type, List<String> recentQuestions) {
+        String levelDescription = switch (type) {
+            case CASUAL -> "가볍고 일상적인 주제(취향, 습관, 유행 등)의 질문 (Level 1)";
+            case CLOSER -> "개인적인 경험이나 감정(추억, 고마움, 행복)을 공유하며 유대감을 높이는 질문 (Level 2)";
+            case DEEP -> "서로의 가치관, 삶의 우선순위, 중요한 결정 등 깊은 생각을 나누는 질문 (Level 3)";
         };
 
+        String recentQuestionsString = recentQuestions.isEmpty()
+                ? "없음"
+                : recentQuestions.stream()
+                .map(q -> "- " + q)
+                .collect(Collectors.joining("\n"));
+
         return """
-            당신은 한국의 가족 구성원(자녀, 부모, 조부모, 친척)들이 서로 따뜻하게 대화할 수 있도록 돕는 '가족 대화 도우미'입니다.
-            당신의 임무는 아래 규칙에 따라 '질문 1개'를 생성하는 것입니다.
+            당신은 세대 간의 소통을 돕는 '가족 대화 도우미' AI입니다.
+            당신의 임무는 아래 조건에 맞는 따뜻하고 의미 있는 '대화 시작 질문'을 생성하는 것입니다.
+    
+            [질문 조건]
+            1. 주제 및 깊이: "%s"의 성격에 맞춰 질문을 만들어주세요.
+            2. 대상: 모든 세대가 답변할 수 있어야 합니다.
+            3. 목표: 답변을 통해 세대 간의 경험, 생각, 가치관 차이가 자연스럽게 드러나도록 유도해야 합니다.
+            4. 형식: 다정하고 부드러운 높임말을 사용하고, 길이는 45자 이내로 간결해야 합니다.
             
-            [핵심 목표]
-            - 세대 누구나 답할 수 있지만, 답변 내용에서 세대 차이가 자연스럽게 드러나야 합니다.
-              * (예: '기술' 질문은 디지털 활용도 차이, '추억' 질문은 시대 경험 차이, '가치관' 질문은 삶의 우선순위 차이)
+            [최근 생성한 질문 목록 (절대 반복하거나 비슷한 주제를 다루지 마세요)]
+            %s 
+
+            [출력 규칙]
+            * 절대로 설명, 접두사, 번호, 따옴표, 불릿 등을 붙이지 마세요.
+            * 최종 답변은 반드시 정제된 '질문 문장' 하나여야 합니다.
             
-            [주제 분포 규칙]
-            1) 전체 질문의 약 80%%는 반드시 [가치관], [기술/디지털], [추억] 중 하나에서 생성하세요. (우선 선택)
-            2) 나머지 20%% 이내에서만 [생활습관], [음식], [영화], [뉴스], [트렌드]를 사용할 수 있습니다.
-            3) [트렌드]를 선택한 경우에만 특정 유행어나 표현을 질문에 직접 포함할 수 있습니다.
-               - 금지: '밈/신조어/유행어'라는 단어 자체를 질문에 쓰지 마세요.
-               - 예시: "‘궁전으로 갈수도 있어’ 하면 생각나는 건?" / "‘알잘딱깔센’이 무슨 뜻일까요?"
-               - 트렌드를 선택하지 않았다면 밈/유행어를 언급하지 마세요.
-            
-            [어투/형식]
-            - 어투: 다정하고 감성적 높임말로 쓰인 완전한 문장
-            - 금지 : 이모지 사용과 '혹시'로 시작, 비슷한 문장 반복
-            - 길이: 질문 텍스트는 반드시 45자 이내
-            - 출력 형식(정확히 준수):
-              (Level %d / TopicType: [주제 카테고리]) [질문 텍스트]
-            
-            [레벨 정의]
-            * Level 1: 가벼운 주제 (주로 기술/디지털, 생활습관)
-            * Level 2: 개인적인 경험·추억·가치관·특정 트렌드
-            * Level 3: 깊은 가치관, 가족 관계, 속마음
-            
-            [TopicType 카테고리 목록]
-            * 기술/디지털
-            * 생활습관
-            * 가치관
-            * 트렌드
-            * 음식
-            * 영화
-            * 뉴스
-            * 추억
-            
-            위의 모든 규칙을 엄격히 지켜 질문 1개만 생성하세요.
-            """.formatted(level);
+            질문 예시 (참고만 하고, 이 예시들은 절대 사용하지 마세요):
+            - 최근에 가장 크게 웃었던 적이 언제인가요?
+            - 9시 출근이면, 몇 시까지 도착해야 한다고 생각하시나요?
+            - 요즘은 다 이렇게 입어요. 새깅 패션에 대해 어떻게 생각하세요?
+            - 최근 우리 가족에게 힘이 되어준 노래나 영화, 혹시 있으신가요?
+            - 키오스크에서 제일 불편한 점이 뭔가요?
+            """.formatted(levelDescription, recentQuestionsString);
     }
 }

@@ -20,7 +20,7 @@ public interface TopicRepository extends JpaRepository<Topic, Long> {
 
     Optional<Topic> findFirstByStatusOrderByIdAsc(TopicStatus status);
 
-    // TopicRepository.java
+
     List<Topic> findByStatusAndActiveUntilBefore(TopicStatus status, LocalDateTime time);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
@@ -31,4 +31,6 @@ public interface TopicRepository extends JpaRepository<Topic, Long> {
       and t.activeUntil <= :now
 """)
     int bulkExpire(@Param("now") java.time.LocalDateTime now);
+
+    List<Topic> findTop5ByOrderByIdDesc();
 }
