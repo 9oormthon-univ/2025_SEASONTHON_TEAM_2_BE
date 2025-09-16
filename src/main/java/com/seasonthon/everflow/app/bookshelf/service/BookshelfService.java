@@ -158,6 +158,9 @@ public class BookshelfService {
         }
 
         // 주의: FK 제약(answers) 때문에 삭제가 거부될 수 있음. 필요 시 Answer 먼저 삭제하도록 확장.
+        // 먼저 해당 질문의 모든 답변 삭제 (FK 제약 회피)
+        answerRepository.deleteByQuestionId(questionId);
+        // 질문 삭제
         questionRepository.delete(q);
     }
 
