@@ -15,9 +15,8 @@ public class TopicScheduler {
 
     private final TopicRepository topicRepository;
 
-    @Scheduled(cron = "*/10 * * * * *", zone = "Asia/Seoul")
-    //@Scheduled(cron = "0 2 0 * * *", zone = "Asia/Seoul")
     @Transactional
+    @Scheduled(cron = "0 2 0 * * *", zone = "Asia/Seoul")
     public void activateIfNone() {
         LocalDateTime now = LocalDateTime.now();
 
@@ -26,8 +25,10 @@ public class TopicScheduler {
                         TopicStatus.ACTIVE, now, now
                 )
                 .isPresent();
-        if (hasActive) return;
 
+        if (hasActive) {
+            return;
+        }
 
         topicRepository.findFirstByStatusOrderByIdAsc(TopicStatus.DRAFT)
                 .ifPresent(next -> next.activateAt(now, 3));

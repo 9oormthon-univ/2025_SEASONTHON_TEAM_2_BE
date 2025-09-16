@@ -55,7 +55,7 @@ public class Topic {
 
     public void expire() {
         this.status = TopicStatus.EXPIRED;
-        this.cachedDaysLeft = 0; // 조회 캐시도 함께 0으로
+        this.cachedDaysLeft = 0;
     }
 
     private int calculateDaysLeft() {

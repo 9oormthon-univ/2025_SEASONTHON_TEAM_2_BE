@@ -1,7 +1,7 @@
 package com.seasonthon.everflow.app.topic.scheduler;
 
 import com.seasonthon.everflow.app.topic.repository.TopicRepository;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -17,9 +17,7 @@ public class TopicExpiryScheduler {
     private final TopicRepository topicRepository;
 
     @Transactional
-
-    @Scheduled(cron = "*/8 * * * * *", zone = "Asia/Seoul")
-    //@Scheduled(cron = "0 0 0 * * *", zone = "Asia/Seoul")
+    @Scheduled(cron = "0 0 0 * * *", zone = "Asia/Seoul")
     public void expireOutdatedTopics() {
         LocalDateTime now = LocalDateTime.now();
         int updated = topicRepository.bulkExpire(now);
