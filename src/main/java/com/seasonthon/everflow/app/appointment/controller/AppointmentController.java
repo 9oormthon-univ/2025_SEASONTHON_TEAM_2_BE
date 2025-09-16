@@ -81,8 +81,11 @@ public class AppointmentController {
 
     @Operation(summary = "약속삭제", description = "해당 약속을 삭제합니다.")
     @DeleteMapping("/{appointmentId}")
-    public ResponseEntity<ApiResponse<AppointmentResponseDto.MessageResponseDto>> deleteAppointment(@PathVariable Long appointmentId) {
-        AppointmentResponseDto.MessageResponseDto resultDto = appointmentService.deleteAppointment(appointmentId);
+    public ResponseEntity<ApiResponse<AppointmentResponseDto.MessageResponseDto>> deleteAppointment(
+            @PathVariable Long appointmentId,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        Long userId = userDetails.getUserId();
+        AppointmentResponseDto.MessageResponseDto resultDto = appointmentService.deleteAppointment(appointmentId, userId);
 
         return ResponseEntity.ok(ApiResponse.of(SuccessStatus.OK, resultDto));
     }

@@ -31,6 +31,7 @@ public enum ErrorStatus implements BaseErrorCode {
 
     // 403 Forbidden
     FORBIDDEN(HttpStatus.FORBIDDEN, "COMMON403", "접근 권한이 없습니다."),
+    APPOINTMENT_DELETE_FORBIDDEN(HttpStatus.FORBIDDEN, "APPOINTMENT4031", "약속을 삭제할 권한이 없습니다."),
     FAMILY_JOIN_ATTEMPT_EXCEEDED(HttpStatus.FORBIDDEN, "FAMILYJOIN4035","가족 가입에 4회 연속 실패했습니다. 가입 요청을 확인해주세요."),
 
     // 404 Not Found
