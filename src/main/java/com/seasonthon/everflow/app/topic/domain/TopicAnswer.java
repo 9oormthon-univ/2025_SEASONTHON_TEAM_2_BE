@@ -25,6 +25,9 @@ public class TopicAnswer {
     @Column(nullable = false, length = 4000)
     private String content;
 
+    @Column(name = "family_id", nullable = false)
+    private Long familyId;
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
@@ -36,6 +39,7 @@ public class TopicAnswer {
         this.topic = topic;
         this.user = user;
         this.content = content;
+        this.familyId = familyId;
         this.createdAt = LocalDateTime.now();
     }
 

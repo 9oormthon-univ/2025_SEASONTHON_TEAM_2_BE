@@ -98,6 +98,7 @@ public class TopicService {
                 .topic(topic)
                 .user(user)
                 .content(req.content())
+                .familyId(user.getFamily().getId())
                 .build();
 
         if (user.getFamily() != null) {
