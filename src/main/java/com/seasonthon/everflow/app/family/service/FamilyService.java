@@ -324,12 +324,16 @@ public class FamilyService {
     }
 
     private void notifyFamilyAction(Family family, User actor, Long requestId) {
-        List<User> members = userRepository.findAllByFamilyId(family.getId());
+        User creator = family.getMembers().stream()
+                .min(java.util.Comparator.comparing(User::getCreatedAt))
+                .orElseThrow(() -> new GeneralException(ErrorStatus.FAMILY_NOT_FOUND));
+
         String link = "/family/pending/" + requestId;
         String contentText = String.format("%s님이 가족 가입에 %d회 연속 실패했습니다. 가입 요청을 확인해주세요.", actor.getNickname(), MAX_ATTEMPTS);
-        members.forEach(recipient -> notificationService.sendNotification(
-                recipient, NotificationType.FAMILY_ACTION, contentText, link
-        ));
+
+        notificationService.sendNotification(
+                creator, NotificationType.FAMILY_ACTION, contentText, link
+        );
     }
 
     private void notifyFamilyResponse(Family family, User newMember) {
