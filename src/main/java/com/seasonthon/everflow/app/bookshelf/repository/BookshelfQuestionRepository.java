@@ -10,14 +10,9 @@ import java.util.Optional;
 public interface BookshelfQuestionRepository extends JpaRepository<BookshelfQuestion, Long> {
     Optional<BookshelfQuestion> findByQuestionText(String text);
 
-    List<BookshelfQuestion> findAllByIsActiveTrueOrderByIdAsc();
-
-    // 새로 추가: 스코프 기준 조회
     List<BookshelfQuestion> findAllByScope(QuestionScope scope);
 
-    // 가족별 커스텀 질문 조회
     List<BookshelfQuestion> findAllByScopeAndFamily_Id(QuestionScope scope, Long familyId);
 
-    // 특정 질문 존재 여부 (중복 방지)
     boolean existsByQuestionText(String questionText);
 }

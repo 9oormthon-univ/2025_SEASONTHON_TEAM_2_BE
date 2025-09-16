@@ -24,14 +24,15 @@ public class HomeService {
     private final TopicAnswerRepository answerRepository;
     private final AuthService authService;
     private final UserRepository userRepository;
-    private final BookshelfService bookshelfService;
 
     public ClosenessResponseDto getCloseness(Long userId, Long familyId) {
         LocalDateTime from = LocalDateTime.now().minusDays(30);
 
         long myCount = answerRepository.countSinceByUser(userId, from);
+
+
         if (myCount == 0) {
-            throw new GeneralException(ErrorStatus.HOME_DATA_NOT_FOUND);
+            return new ClosenessResponseDto(0, 0, 0, 0, familyId);
         }
 
         List<Object[]> grouped = answerRepository.countSinceByFamilyGroup(familyId, from);
@@ -49,19 +50,16 @@ public class HomeService {
         }
 
         if (familyMax == 0) {
-            throw new GeneralException(ErrorStatus.HOME_DATA_NOT_FOUND);
+            return new ClosenessResponseDto(0, myCount, 0, 1, familyId);
         }
 
         int rank = 1;
         List<Long> sorted = counts.values().stream()
                 .sorted(Comparator.reverseOrder())
                 .toList();
-        for (int i = 0; i < sorted.size(); i++) {
-            if (Objects.equals(sorted.get(i), myCount)) {
-                rank = i + 1;
-                break;
-            }
-        }
+
+        long higherScores = counts.values().stream().filter(score -> score > myCount).count();
+        rank = (int) higherScores + 1;
 
         int pct = (int) Math.round((myCount * 100.0) / familyMax);
 

@@ -8,10 +8,8 @@ import java.util.Optional;
 
 public interface BookshelfAnswerRepository extends JpaRepository<BookshelfAnswer, Long> {
 
-    // 특정 질문 + 사용자에 대한 답변
     Optional<BookshelfAnswer> findByQuestionIdAndUserId(Long questionId, Long userId);
 
-    // 특정 사용자 + 여러 질문 id에 대한 답변들
     List<BookshelfAnswer> findAllByUserIdAndQuestionIdIn(Long userId, List<Long> questionIds);
 
     long deleteByQuestionId(Long questionId);

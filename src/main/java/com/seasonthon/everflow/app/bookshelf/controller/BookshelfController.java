@@ -26,7 +26,6 @@ public class BookshelfController {
     private final BookshelfService bookshelfService;
     private final AuthService authService;
 
-    // 내 책장 조회
     @Operation(summary = "내 책장 조회", description = "기본 질문 + 가족 커스텀 질문을 모두 포함해, 각 질문에 대한 나의 답변을 함께 조회합니다.")
     @GetMapping("/me")
     public ApiResponse<BookshelfUserViewDto> getMyShelf(@AuthenticationPrincipal CustomUserDetails me) {
@@ -34,7 +33,6 @@ public class BookshelfController {
         return ApiResponse.onSuccess(bookshelfService.getMyShelf(meId));
     }
 
-    // 특정 사용자 책장 조회 (가족만)
     @Operation(summary = "가족 책장 조회", description = "같은 가족 구성원의 책장을 조회합니다. (기본 질문 + 가족 커스텀 질문 전체, 해당 사용자의 답변 포함)")
     @GetMapping("/{userId}")
     public ApiResponse<BookshelfUserViewDto> getUserShelf(
@@ -45,7 +43,6 @@ public class BookshelfController {
         return ApiResponse.onSuccess(bookshelfService.getUserShelf(meId, userId));
     }
 
-    // 가족 커스텀 질문 생성
     @Operation(summary = "가족 커스텀 질문 생성", description = "로그인한 사용자가 속한 가족에 커스텀 질문을 추가합니다. 생성 직후 책장 항목 형태(답변=null)로 반환합니다.")
     @PostMapping("/custom-questions")
     public ApiResponse<BookshelfEntryDto> createCustomQuestion(
@@ -56,7 +53,6 @@ public class BookshelfController {
         return ApiResponse.onSuccess(bookshelfService.createCustomQuestion(meId, req));
     }
 
-    // 가족 커스텀 질문 삭제
     @Operation(summary = "가족 커스텀 질문 삭제", description = "같은 가족이라면 누구나 해당 가족의 커스텀 질문을 삭제할 수 있습니다.")
     @DeleteMapping("/custom-questions/{questionId}")
     public ApiResponse<Void> deleteCustomQuestion(
@@ -68,7 +64,6 @@ public class BookshelfController {
         return ApiResponse.onSuccess(null);
     }
 
-    // 내 답변 저장/수정 (일괄)
     @Operation(
             summary = "내 답변 저장/수정 (일괄)",
             description = "기본 질문과 가족 커스텀 질문을 함께, 한 번의 요청으로 저장/수정합니다. answer가 null/빈문자열이어도 저장됩니다. " +
@@ -104,6 +99,7 @@ public class BookshelfController {
                         )
                 )
         )
+
     @PatchMapping("/me")
     public ApiResponse<Void> writeMyAnswers(
             @AuthenticationPrincipal CustomUserDetails me,

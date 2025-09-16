@@ -42,7 +42,7 @@ public class DefaultBookshelfSeeder implements CommandLineRunner {
                     "INFJ","INFP","ENFJ","ENFP",
                     "ISTJ","ISFJ","ESTJ","ESFJ",
                     "ISTP","ISFP","ESTP","ESFP"
-            ); // 저장 포맷은 콤마 문자열(프론트에서 split) 또는 JSON 배열로 바꿔도 OK
+            );
 
     @Override
     @Transactional
@@ -50,7 +50,6 @@ public class DefaultBookshelfSeeder implements CommandLineRunner {
         for (String q : DEFAULTS) {
             repository.findByQuestionText(q).ifPresentOrElse(
                     exist -> {
-                        // 존재 시: MBTI라면 옵션 채워주기(비어 있으면)
                         if (q.equals(MBTI_TEXT) && (exist.getOptions() == null || exist.getOptions().isBlank())) {
                             exist.updateOptions(MBTI_OPTIONS);
                         }
