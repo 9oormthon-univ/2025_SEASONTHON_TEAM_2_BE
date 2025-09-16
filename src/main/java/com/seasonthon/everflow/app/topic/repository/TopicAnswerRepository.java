@@ -14,14 +14,14 @@ public interface TopicAnswerRepository extends JpaRepository<TopicAnswer, Long> 
 
     Optional<TopicAnswer> findByTopicIdAndUserId(Long topicId, Long userId);
 
-    List<TopicAnswer> findAllByTopicId(Long topicId);
+    List<TopicAnswer> findAllByTopicIdOrderByCreatedAtDesc(Long topicId);
 
     @Query("""
       select ta from TopicAnswer ta
       join fetch ta.user u
       where ta.topic.id = :topicId
         and ta.familyId = :familyId
-      order by ta.createdAt asc
+      order by ta.createdAt desc
     """)
     List<TopicAnswer> findFamilyAnswersByTopic(@Param("topicId") Long topicId, @Param("familyId") Long familyId);
 
@@ -30,7 +30,7 @@ public interface TopicAnswerRepository extends JpaRepository<TopicAnswer, Long> 
       join fetch ta.user u
       where ta.topic.id = :activeTopicId
         and ta.familyId = :familyId
-      order by ta.createdAt asc
+      order by ta.createdAt desc
     """)
     List<TopicAnswer> findFamilyAnswers(@Param("activeTopicId") Long activeTopicId, @Param("familyId") Long familyId);
 
@@ -39,7 +39,7 @@ public interface TopicAnswerRepository extends JpaRepository<TopicAnswer, Long> 
       join fetch ta.user u
       join fetch ta.topic t
       where ta.familyId = :familyId
-      order by t.activeFrom desc, ta.createdAt asc
+      order by t.activeFrom desc, ta.createdAt desc
     """)
     List<TopicAnswer> findAllByFamilyId(@Param("familyId") Long familyId);
 

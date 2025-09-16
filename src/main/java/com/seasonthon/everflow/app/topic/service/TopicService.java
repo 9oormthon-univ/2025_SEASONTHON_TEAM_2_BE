@@ -134,7 +134,7 @@ public class TopicService {
     }
 
     public List<TopicAnswerResponseDto.Info> getTopicAnswers(Long topicId) {
-        return answerRepository.findAllByTopicId(topicId)
+        return answerRepository.findAllByTopicIdOrderByCreatedAtDesc(topicId)
                 .stream()
                 .map(TopicAnswerResponseDto.Info::of)
                 .toList();
