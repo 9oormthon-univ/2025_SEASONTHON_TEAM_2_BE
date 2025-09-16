@@ -194,12 +194,21 @@ public class AppointmentService {
     }
 
     @Transactional
-    public AppointmentResponseDto.MessageResponseDto deleteAppointment(Long appointmentId) {
+    public AppointmentResponseDto.MessageResponseDto deleteAppointment(Long appointmentId, Long userId) {
         // 1. 삭제하려는 약속이 실제로 존재하는지 확인합니다. (존재하지 않으면 예외 발생)
         Appointment appointment = appointmentRepository.findById(appointmentId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.APPOINTMENT_NOT_FOUND));
 
-        // 2. JpaRepository가 기본으로 제공하는 delete 메서드를 사용하여 약속을 삭제합니다.
+        // 2. 삭제 권한 확인 (제안자 또는 참여자인지)
+        boolean isParticipant = appointment.getParticipants().stream()
+                .anyMatch(p -> p.getUser().getId().equals(userId));
+        boolean isProposer = appointment.getProposeUser().getId().equals(userId);
+
+        if (!isParticipant && !isProposer) {
+            throw new GeneralException(ErrorStatus.APPOINTMENT_DELETE_FORBIDDEN);
+        }
+
+        // 3. JpaRepository가 기본으로 제공하는 delete 메서드를 사용하여 약속을 삭제합니다.
         appointmentRepository.delete(appointment);
 
         return new AppointmentResponseDto.MessageResponseDto("약속을 삭제하셨습니다.");
