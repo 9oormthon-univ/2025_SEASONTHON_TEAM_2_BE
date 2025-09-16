@@ -4,7 +4,6 @@ import com.seasonthon.everflow.app.global.code.dto.ApiResponse;
 import com.seasonthon.everflow.app.global.oauth.domain.CustomUserDetails;
 import com.seasonthon.everflow.app.home.dto.HomeDto;
 import com.seasonthon.everflow.app.home.service.HomeService;
-import com.seasonthon.everflow.app.topic.dto.TopicDto;
 import com.seasonthon.everflow.app.topic.service.TopicService;
 import com.seasonthon.everflow.app.global.oauth.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;

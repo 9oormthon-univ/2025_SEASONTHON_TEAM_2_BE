@@ -9,7 +9,7 @@ import com.seasonthon.everflow.app.topic.domain.Topic;
 import com.seasonthon.everflow.app.topic.domain.TopicAnswer;
 import com.seasonthon.everflow.app.topic.domain.TopicStatus;
 import com.seasonthon.everflow.app.topic.domain.TopicType;
-import com.seasonthon.everflow.app.topic.dto.TopicDto.*;
+import com.seasonthon.everflow.app.topic.dto.*;
 import com.seasonthon.everflow.app.topic.repository.TopicAnswerRepository;
 import com.seasonthon.everflow.app.topic.repository.TopicRepository;
 import com.seasonthon.everflow.app.user.domain.User;
@@ -43,7 +43,7 @@ public class TopicService {
     }
 
     @Transactional
-    public TopicResponse createTopic(TopicCreateRequest req) {
+    public TopicResponseDto.Simple createTopic(TopicRequestDto.Create req) {
         LocalDateTime from = (req.activeFrom() != null) ? req.activeFrom() : LocalDateTime.now();
         LocalDateTime until = from.plusDays(3);
 
@@ -57,18 +57,18 @@ public class TopicService {
                 .build();
 
         topic.activate();
-        return TopicResponse.of(topicRepository.save(topic));
+        return TopicResponseDto.Simple.of(topicRepository.save(topic));
     }
 
     @Transactional
-    public TopicResponse updateTopic(Long topicId, TopicUpdateRequest req) {
+    public TopicResponseDto.Simple updateTopic(Long topicId, TopicRequestDto.Update req) {
         Topic t = topicRepository.findById(topicId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.TOPIC_NOT_FOUND));
         t.updateQuestion(req.question());
-        return TopicResponse.of(t);
+        return TopicResponseDto.Simple.of(t);
     }
 
-    public TopicResponse getCurrentActiveTopic() {
+    public TopicResponseDto.Simple getCurrentActiveTopic() {
         LocalDateTime now = LocalDateTime.now();
 
         Topic t = topicRepository
@@ -79,11 +79,11 @@ public class TopicService {
 
         t.refreshRemainingDays();
 
-        return TopicResponse.of(t);
+        return TopicResponseDto.Simple.of(t);
     }
 
     @Transactional
-    public AnswerResponse createAnswer(Long topicId, Long userId, AnswerCreateRequest req) {
+    public TopicAnswerResponseDto.Info createAnswer(Long topicId, Long userId, TopicAnswerRequestDto.Create req) {
         Topic topic = topicRepository.findById(topicId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.TOPIC_NOT_FOUND));
         if (!isActive(topic)) {
@@ -115,11 +115,11 @@ public class TopicService {
                     ));
         }
 
-        return AnswerResponse.of(answerRepository.save(a));
+        return TopicAnswerResponseDto.Info.of(answerRepository.save(a));
     }
 
     @Transactional
-    public AnswerResponse updateAnswer(Long topicId, Long userId, AnswerUpdateRequest req) {
+    public TopicAnswerResponseDto.Info updateAnswer(Long topicId, Long userId, TopicAnswerRequestDto.Update req) {
         Topic t = topicRepository.findById(topicId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.TOPIC_NOT_FOUND));
         if (!isActive(t)) {
@@ -129,35 +129,35 @@ public class TopicService {
         TopicAnswer a = answerRepository.findByTopicIdAndUserId(topicId, userId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.ANSWER_NOT_FOUND));
         a.updateContent(req.content());
-        return AnswerResponse.of(a);
+        return TopicAnswerResponseDto.Info.of(a);
     }
 
-    public List<AnswerResponse> getTopicAnswers(Long topicId) {
+    public List<TopicAnswerResponseDto.Info> getTopicAnswers(Long topicId) {
         return answerRepository.findAllByTopicId(topicId)
                 .stream()
-                .map(AnswerResponse::of)
+                .map(TopicAnswerResponseDto.Info::of)
                 .toList();
     }
 
-    public List<AnswerResponse> getFamilyAnswers(Long familyId) {
+    public List<TopicAnswerResponseDto.Info> getFamilyAnswers(Long familyId) {
         Topic current = topicRepository.findFirstByStatusAndActiveFromLessThanEqualAndActiveUntilGreaterThanOrderByActiveFromDesc(
                 TopicStatus.ACTIVE, LocalDateTime.now(), LocalDateTime.now()
         ).orElseThrow(() -> new GeneralException(ErrorStatus.TOPIC_NOT_FOUND));
 
         return answerRepository.findFamilyAnswers(current.getId(), familyId)
                 .stream()
-                .map(AnswerResponse::of)
+                .map(TopicAnswerResponseDto.Info::of)
                 .toList();
     }
 
-    public List<AnswerResponse> getFamilyAnswersByTopic(Long topicId, Long familyId) {
+    public List<TopicAnswerResponseDto.Info> getFamilyAnswersByTopic(Long topicId, Long familyId) {
         return answerRepository.findFamilyAnswersByTopic(topicId, familyId)
                 .stream()
-                .map(AnswerResponse::of)
+                .map(TopicAnswerResponseDto.Info::of)
                 .toList();
     }
 
-    public FamilyAnsweredTopicsResponse getFamilyAnsweredTopics(Long familyId) {
+    public TopicResponseDto.FamilyAnswered getFamilyAnsweredTopics(Long familyId) {
         List<TopicAnswer> raws = answerRepository.findAllByFamilyId(familyId);
 
         Map<Topic, List<TopicAnswer>> grouped = raws.stream()
@@ -167,16 +167,16 @@ public class TopicService {
                         Collectors.toList()
                 ));
 
-        List<TopicResponse> topics = grouped.keySet()
+        List<TopicResponseDto.Simple> topics = grouped.keySet()
                 .stream()
-                .map(TopicResponse::of)
+                .map(TopicResponseDto.Simple::of)
                 .toList();
 
-        return new FamilyAnsweredTopicsResponse(topics, topics.size());
+        return TopicResponseDto.FamilyAnswered.of(topics);
     }
 
     @Transactional
-    public TopicResponse createDailyTopicFromGemini(TopicType type, List<String> recentQuestions) {
+    public TopicResponseDto.Simple createDailyTopicFromGemini(TopicType type, List<String> recentQuestions) {
 
         String question = geminiService.generateDailyQuestion(type, recentQuestions);
 
@@ -190,6 +190,6 @@ public class TopicService {
                 .type(type)
                 .build();
 
-        return TopicResponse.of(topicRepository.save(topic));
+        return TopicResponseDto.Simple.of(topicRepository.save(topic));
     }
 }
