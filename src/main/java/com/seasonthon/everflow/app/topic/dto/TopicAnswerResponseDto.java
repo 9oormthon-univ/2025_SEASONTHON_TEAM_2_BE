@@ -12,11 +12,16 @@ public class TopicAnswerResponseDto {
             String nickname,
             String profileUrl,
             String content,
-            LocalDateTime createdAt
+            LocalDateTime respondedAt
     ) {
         public static Info of(TopicAnswer a) {
             var user = a.getUser();
             String profileUrl = (user != null) ? user.getProfileUrl() : null;
+
+            LocalDateTime timestamp = (a.getUpdatedAt() != null && a.getUpdatedAt().isAfter(a.getCreatedAt()))
+                    ? a.getUpdatedAt()
+                    : a.getCreatedAt();
+
             return new Info(
                     a.getId(),
                     a.getTopic().getId(),
@@ -24,7 +29,7 @@ public class TopicAnswerResponseDto {
                     user.getNickname(),
                     profileUrl,
                     a.getContent(),
-                    a.getCreatedAt()
+                    timestamp
             );
         }
     }

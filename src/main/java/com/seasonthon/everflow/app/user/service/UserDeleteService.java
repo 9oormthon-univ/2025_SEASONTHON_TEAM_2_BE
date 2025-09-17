@@ -72,7 +72,6 @@ public class UserDeleteService {
         bookshelfQuestionRepository.deleteAllByCreatedById(userId);
         appointmentParticipantRepository.deleteAllByUserId(userId);
         familyJoinRequestRepository.deleteAllByUserId(userId);
-        memoRepository.deleteAllByUpdatedBy(userId);
         emitterRepository.deleteAllByUserId(userId);
         appointmentRepository.deleteAllByProposeUser_Id(userId);
 

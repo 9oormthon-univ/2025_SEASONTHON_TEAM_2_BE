@@ -25,7 +25,7 @@ public class MemoService {
         return memoRepository.findByFamilyId(familyId)
                 .map(MemoMapper::toDto)
                 .orElseGet(() -> {
-                    Memo memo = Memo.create(familyId, userId);
+                    Memo memo = Memo.create(familyId);
                     Memo saved = memoRepository.save(memo);
                     return MemoMapper.toDto(saved);
                 });
@@ -44,8 +44,7 @@ public class MemoService {
         }
 
         /* 내용 반영: @Version으로 버전은 자동 증가됨 */
-        /* 최근 수정자(updated_by) 기록 */
-        memo.applyContent(content, userId);
+        memo.applyContent(content);
         try {
             Memo saved = memoRepository.save(memo);
             return MemoMapper.toDto(saved);

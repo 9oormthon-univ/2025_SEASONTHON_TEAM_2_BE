@@ -9,5 +9,4 @@ public interface MemoRepository extends JpaRepository<Memo, Long> {
     Optional<Memo> findByFamilyId(Long familyId);
     boolean existsByFamilyId(Long familyId);
 
-    void deleteAllByUpdatedBy(Long updatedBy);
 }
