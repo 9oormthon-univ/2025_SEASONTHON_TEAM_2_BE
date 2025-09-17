@@ -18,7 +18,8 @@ import java.time.LocalDateTime;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Memo {
 
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(name = "family_id", nullable = false, unique = true)
@@ -40,7 +41,14 @@ public class Memo {
     private LocalDateTime updatedAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "updated_by", nullable = true)
+    @JoinColumn(
+            name = "updated_by",
+            nullable = true,
+            foreignKey = @ForeignKey(
+                    name = "fk_memo_user",
+                    foreignKeyDefinition = "FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE SET NULL"
+            )
+    )
     private User updatedBy;
 
     private Memo(Long familyId) {
