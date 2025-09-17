@@ -42,7 +42,7 @@ public class AppointmentService {
 
     @Transactional
     public AppointmentResponseDto.AppointmentAddResponseDto addAppointment(AppointmentRequestDto.AppointmentAddRequestDto requestDto, Long proposeUserId) {
-        // 1. 약속을 제안한 사용자(proposeUser) 정보를 DB에서 조회
+        // 1. 약속을 제안한 사용자(proposeUser) 조회
         User proposeUser = userRepository.findById(proposeUserId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.USER_NOT_FOUND));
 
@@ -50,7 +50,7 @@ public class AppointmentService {
             throw new GeneralException(ErrorStatus.SELF_APPOINTMENT_NOT_ALLOWED);
         }
 
-        // 2. Appointment 엔터티 생성
+        // 2. Appointment 엔터티 생성 및 저장 (부모 먼저 저장)
         Appointment appointment = Appointment.builder()
                 .proposeUser(proposeUser)
                 .family(proposeUser.getFamily())
@@ -62,33 +62,37 @@ public class AppointmentService {
                 .color(requestDto.getColor())
                 .build();
 
+        Appointment savedAppointment = appointmentRepository.save(appointment);
+
         // 3. 참여자(participant) 정보 생성
         List<User> participants = userRepository.findAllById(requestDto.getParticipantUserIds());
         if (participants.size() != requestDto.getParticipantUserIds().size()) {
             throw new GeneralException(ErrorStatus.USER_NOT_FOUND);
         }
 
+        Appointment finalSavedAppointment = savedAppointment;
         List<AppointmentParticipant> appointmentParticipants = participants.stream()
                 .map(participantUser -> AppointmentParticipant.builder()
-                        .appointment(appointment)
+                        .appointment(finalSavedAppointment)
                         .user(participantUser)
                         .acceptStatus(AcceptStatus.PENDING)
                         .build())
                 .collect(Collectors.toList());
 
-        // 4. Appointment에 참여자 목록 설정 (CascadeType.ALL 덕분에 함께 저장됨)
-        appointment.getParticipants().addAll(appointmentParticipants);
+        // 4. 참여자 목록을 appointment에 추가
+        savedAppointment.getParticipants().addAll(appointmentParticipants);
 
-        // 5. 약속 정보 저장
-        Appointment savedAppointment = appointmentRepository.save(appointment);
+        // 5. 다시 저장 (CascadeType.ALL 덕분에 participants도 함께 저장됨)
+        savedAppointment = appointmentRepository.save(savedAppointment);
 
+        // 6. 알림 발송
         String link = "/api/appointments/" + savedAppointment.getId() + "participant";
         participants.forEach(participantUser -> {
             String contentText = String.format("%s님이 %s에게 약속을 신청했어요.", proposeUser.getNickname(), participantUser.getNickname());
             notificationService.sendNotification(participantUser, NotificationType.APPOINTMENT_ACTION, contentText, link);
         });
 
-        // 6. 생성된 약속의 ID를 담아 응답 반환
+        // 7. 생성된 약속의 ID 반환
         return new AppointmentResponseDto.AppointmentAddResponseDto(savedAppointment.getId(), savedAppointment.getName());
     }
 
