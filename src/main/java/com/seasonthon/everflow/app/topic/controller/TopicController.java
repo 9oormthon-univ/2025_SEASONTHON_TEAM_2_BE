@@ -82,7 +82,7 @@ public class TopicController {
     }
 
 
-    @Operation(summary = "토픽에 답변 작성(본인)", description = "활성화된 토픽에 한해 로그인 사용자의 답변을 작성합니다. (이미 답변이 있으면 409)")
+    @Operation(summary = "토픽에 답변 작성 (본인)", description = "활성화된 토픽에 한해 로그인 사용자의 답변을 작성합니다. (이미 답변이 있으면 409)")
     @PostMapping("/{topicId}/answers")
     public ApiResponse<TopicAnswerResponseDto.Info> createMyAnswer(
             @AuthenticationPrincipal CustomUserDetails me,
@@ -102,6 +102,7 @@ public class TopicController {
         return ApiResponse.onSuccess(topicService.createAnswer(topicId, userId, req));
     }
 
+    @Operation(summary = "토픽에 답변 수정 (본인)", description = "활성화된 토픽에 한해 로그인 사용자의 답변을 수정합니다.")
     @PatchMapping(value = "/{topicId}/answers", consumes = org.springframework.http.MediaType.APPLICATION_JSON_VALUE, produces = org.springframework.http.MediaType.APPLICATION_JSON_VALUE)
     public ApiResponse<TopicAnswerResponseDto.Info> updateMyAnswer(
             @AuthenticationPrincipal CustomUserDetails me,

@@ -27,7 +27,6 @@ public class Memo {
     @Column(nullable = false, length = 800)
     private String content;
 
-    /** 낙관적 락 */
     @Version
     @Column(nullable = false)
     private int version;

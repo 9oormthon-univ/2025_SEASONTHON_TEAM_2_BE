@@ -14,14 +14,15 @@ public interface TopicAnswerRepository extends JpaRepository<TopicAnswer, Long> 
 
     Optional<TopicAnswer> findByTopicIdAndUserId(Long topicId, Long userId);
 
-    List<TopicAnswer> findAllByTopicIdOrderByCreatedAtDesc(Long topicId);
+    @Query("select ta from TopicAnswer ta where ta.topic.id = :topicId order by GREATEST(ta.updatedAt, ta.createdAt) desc")
+    List<TopicAnswer> findAllByTopicIdOrderByMostRecent(@Param("topicId") Long topicId);
 
     @Query("""
       select ta from TopicAnswer ta
       join fetch ta.user u
       where ta.topic.id = :topicId
         and ta.familyId = :familyId
-      order by ta.createdAt desc
+      order by GREATEST(ta.updatedAt, ta.createdAt) desc
     """)
     List<TopicAnswer> findFamilyAnswersByTopic(@Param("topicId") Long topicId, @Param("familyId") Long familyId);
 
@@ -30,7 +31,7 @@ public interface TopicAnswerRepository extends JpaRepository<TopicAnswer, Long> 
       join fetch ta.user u
       where ta.topic.id = :activeTopicId
         and ta.familyId = :familyId
-      order by ta.createdAt desc
+      order by GREATEST(ta.updatedAt, ta.createdAt) desc
     """)
     List<TopicAnswer> findFamilyAnswers(@Param("activeTopicId") Long activeTopicId, @Param("familyId") Long familyId);
 
@@ -39,7 +40,7 @@ public interface TopicAnswerRepository extends JpaRepository<TopicAnswer, Long> 
       join fetch ta.user u
       join fetch ta.topic t
       where ta.familyId = :familyId
-      order by t.activeFrom desc, ta.createdAt desc
+      order by t.activeFrom desc, GREATEST(ta.updatedAt, ta.createdAt) desc
     """)
     List<TopicAnswer> findAllByFamilyId(@Param("familyId") Long familyId);
 
