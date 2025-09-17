@@ -29,7 +29,6 @@ public class UserDeleteService {
     private final BookshelfQuestionRepository bookshelfQuestionRepository;
     private final AppointmentParticipantRepository appointmentParticipantRepository;
     private final FamilyJoinRequestRepository familyJoinRequestRepository;
-    private final MemoRepository memoRepository;
     private final EmitterRepository emitterRepository;
     private final AppointmentRepository appointmentRepository;
 
@@ -66,14 +65,15 @@ public class UserDeleteService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.USER_NOT_FOUND));
 
-        bookshelfAnswerRepository.deleteAllByUserId(userId);
         topicAnswerRepository.deleteAllByUserId(userId);
         notificationRepository.deleteAllByUserId(userId);
-        bookshelfQuestionRepository.deleteAllByCreatedById(userId);
         appointmentParticipantRepository.deleteAllByUserId(userId);
         familyJoinRequestRepository.deleteAllByUserId(userId);
         emitterRepository.deleteAllByUserId(userId);
         appointmentRepository.deleteAllByProposeUser_Id(userId);
+        bookshelfAnswerRepository.deleteAllByUserId(userId);
+        bookshelfAnswerRepository.deleteAllByQuestionCreatedById(userId);
+        bookshelfQuestionRepository.deleteAllByCreatedById(userId);
 
         user.setFamily(null);
         userRepository.delete(user);

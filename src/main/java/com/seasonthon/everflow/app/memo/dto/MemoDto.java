@@ -6,5 +6,7 @@ public record MemoDto(
         Long id,
         Long familyId,
         String content,
+        String updatedByNickname,
+        int version,
         LocalDateTime updatedAt
 ) {}

@@ -1,5 +1,6 @@
 package com.seasonthon.everflow.app.memo.domain;
 
+import com.seasonthon.everflow.app.user.domain.User;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -23,7 +24,6 @@ public class Memo {
     @Column(name = "family_id", nullable = false, unique = true)
     private Long familyId;
 
-    /** 메모 본문 (최대 800자) */
     @Column(nullable = false, length = 800)
     private String content;
 
@@ -39,6 +39,10 @@ public class Memo {
     @Column(name = "updated_at", nullable = false, columnDefinition = "datetime(6)")
     private LocalDateTime updatedAt;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "updated_by", nullable = true)
+    private User updatedBy;
+
     private Memo(Long familyId) {
         this.familyId = familyId;
         this.content = "";
@@ -48,7 +52,8 @@ public class Memo {
         return new Memo(familyId);
     }
 
-    public void applyContent(String newContent) {
+    public void applyContent(String newContent, User editor) {
         this.content = (newContent == null) ? "" : newContent;
+        this.updatedBy = editor;
     }
 }
