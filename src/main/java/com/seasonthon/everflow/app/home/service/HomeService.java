@@ -1,6 +1,5 @@
 package com.seasonthon.everflow.app.home.service;
 
-import com.seasonthon.everflow.app.bookshelf.service.BookshelfService;
 import com.seasonthon.everflow.app.global.code.status.ErrorStatus;
 import com.seasonthon.everflow.app.global.exception.GeneralException;
 import com.seasonthon.everflow.app.global.oauth.service.AuthService;

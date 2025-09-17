@@ -11,4 +11,5 @@ public interface AppointmentParticipantRepository extends JpaRepository<Appointm
      * 특정 약속(appointmentId)에 참여한 특정 사용자(userId)의 참여 정보를 조회합니다.
      */
     Optional<AppointmentParticipant> findByAppointmentIdAndUserId(Long appointmentId, Long userId);
+    void deleteAllByUserId(Long userId);
 }

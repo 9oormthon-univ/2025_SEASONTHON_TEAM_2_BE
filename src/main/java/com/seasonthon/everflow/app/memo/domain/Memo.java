@@ -43,7 +43,6 @@ public class Memo {
     @Column(name = "updated_at", nullable = false, columnDefinition = "datetime(6)")
     private LocalDateTime updatedAt;
 
-    // ---- factory ----
     private Memo(Long familyId, Long updatedBy) {
         this.familyId = familyId;
         this.updatedBy = updatedBy;
@@ -54,7 +53,6 @@ public class Memo {
         return new Memo(familyId, userId);
     }
 
-    // ---- behavior ----
     public void applyContent(String newContent, Long editorUserId) {
         this.content = (newContent == null) ? "" : newContent;
         this.updatedBy = editorUserId;

@@ -8,14 +8,12 @@ import org.springframework.http.HttpStatus;
 @Getter
 @AllArgsConstructor
 public enum ErrorStatus implements BaseErrorCode {
-
     // 400 Bad Request
     BAD_REQUEST(HttpStatus.BAD_REQUEST, "COMMON400", "잘못된 요청입니다."),
     VALIDATION_FAILED(HttpStatus.BAD_REQUEST, "VALID4001", "입력값 유효성 검증에 실패했습니다."),
     MISSING_PARAMETER(HttpStatus.BAD_REQUEST, "VALID4002", "필수 파라미터가 누락되었습니다."),
     FILE_IS_EMPTY(HttpStatus.BAD_REQUEST, "FILE4006", "업로드할 파일이 없습니다."),
     FAMILY_JOIN_FAILED(HttpStatus.BAD_REQUEST, "FAMILY40012", "가족 가입에 3회 이상 실패했습니다."),
-
     INVALID_IMAGE_FORMAT(HttpStatus.BAD_REQUEST, "FILE40018", "지원하지 않는 이미지 형식입니다. (jpg, png만 지원)"),
     IMAGE_SIZE_EXCEEDED(HttpStatus.BAD_REQUEST, "FILE40019", "이미지 크기가 너무 큽니다. (최대 5MB)"),
     INVALID_VERIFICATION_ANSWER(HttpStatus.BAD_REQUEST, "VERIFICATION40020", "가족 검증 질문 또는 답변이 틀렸습니다."),
@@ -72,10 +70,7 @@ public enum ErrorStatus implements BaseErrorCode {
     BOOKSHELF_QUESTION_CREATE_FORBIDDEN(HttpStatus.FORBIDDEN, "BOOKSHELF4031", "책장 질문을 생성할 권한이 없습니다."),
     BOOKSHELF_QUESTION_DELETE_FORBIDDEN(HttpStatus.FORBIDDEN, "BOOKSHELF4032", "책장 질문을 삭제할 권한이 없습니다."),
     BOOKSHELF_ANSWER_UPDATE_FORBIDDEN(HttpStatus.FORBIDDEN, "BOOKSHELF4033", "책장 답변을 수정할 권한이 없습니다."),
-
     REQUEST_NOT_FOUND(HttpStatus.NOT_FOUND, "FAMILYJOIN4040", "가입 요청을 찾을 수 없습니다."),
-
-
 
     // 405 Method Not Allowed
     METHOD_NOT_ALLOWED(HttpStatus.METHOD_NOT_ALLOWED, "COMMON405", "허용되지 않는 HTTP 메서드입니다."),

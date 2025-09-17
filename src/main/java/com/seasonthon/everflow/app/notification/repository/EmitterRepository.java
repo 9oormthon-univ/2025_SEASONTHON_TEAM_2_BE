@@ -36,4 +36,11 @@ public class EmitterRepository {
                 .filter(entry -> entry.getKey().startsWith(userId))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
+    /**
+     * userId에 해당하는 모든 emitter를 삭제
+     */
+    public void deleteAllByUserId(Long userId) {
+        String prefix = String.valueOf(userId);
+        emitters.keySet().removeIf(key -> key.startsWith(prefix));
+    }
 }

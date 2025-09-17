@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
-@Table(name = "family_bookshelf") // ← DB 테이블명이 이거면 맞추세요
+@Table(name = "family_bookshelf")
 @EntityListeners(AuditingEntityListener.class)
 public class BookshelfQuestion {
 
