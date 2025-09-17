@@ -30,14 +30,12 @@ public class MemoService {
                 });
     }
 
-    // 버전은 클라이언트에서 받지 않고 서버에서 자동 관리
     @Transactional
     public MemoDto update(Long userId, String content) {
         Long familyId = resolveFamilyId(userId);
         Memo memo = memoRepository.findByFamilyId(familyId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.MEMO_NOT_FOUND));
 
-        // 본문 길이 검증 (800자 초과 금지)
         if (content != null && content.length() > 800) {
             throw new GeneralException(ErrorStatus.MEMO_CONTENT_TOO_LONG);
         }

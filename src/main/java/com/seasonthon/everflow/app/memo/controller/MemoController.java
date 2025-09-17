@@ -20,7 +20,6 @@ public class MemoController {
 
     private final MemoService memoService;
 
-    // 로그인한 사용자의 가족 메모 조회 (가족당 1장, 항상 존재)
     @Operation(summary = "우리 가족 메모 조회", description = "로그인한 사용자가 속한 가족의 메모를 조회합니다. " + "가족당 1장만 존재하며, 조회 시 메모가 없으면 자동으로 생성됩니다.")
     @GetMapping
     public ApiResponse<MemoDto> getMemo(@AuthenticationPrincipal CustomUserDetails me) {
