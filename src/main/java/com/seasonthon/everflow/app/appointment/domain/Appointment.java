@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-@Table(name = "appointment")
+@Table(name = "appointments")
 @Entity
 @Getter
 @NoArgsConstructor
