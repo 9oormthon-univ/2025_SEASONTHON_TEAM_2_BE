@@ -4,7 +4,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDateTime;
 import java.util.List;
 
-/* 특정 사용자의 책장 화면 응답 */
 public record BookshelfUserViewDto(
         @Schema(description = "사용자 ID", example = "42")
         Long userId,

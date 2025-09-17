@@ -25,6 +25,9 @@ public class TopicAnswer {
     @Column(nullable = false, length = 4000)
     private String content;
 
+    @Column(name = "family_id", nullable = false)
+    private Long familyId;
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
@@ -32,10 +35,11 @@ public class TopicAnswer {
     private LocalDateTime updatedAt;
 
     @Builder
-    private TopicAnswer(Topic topic, User user, String content) {
+    private TopicAnswer(Topic topic, User user, String content, Long familyId) {
         this.topic = topic;
         this.user = user;
         this.content = content;
+        this.familyId = familyId;
         this.createdAt = LocalDateTime.now();
     }
 

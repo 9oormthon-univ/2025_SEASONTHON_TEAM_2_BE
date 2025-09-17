@@ -33,14 +33,12 @@ public class BookshelfService {
     private final UserRepository userRepository;
     private final AuthService authService;
 
-    /** 내 책장 조회 (기본 질문 + 내 가족 커스텀 질문 + 내 답변 매핑) */
     public BookshelfUserViewDto getMyShelf(Long meId) {
         User me = userRepository.findById(meId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.USER_NOT_FOUND));
         return buildUserShelf(me);
     }
 
-    /** 남의 책장 조회: 반드시 같은 가족만 허용 */
     public BookshelfUserViewDto getUserShelf(Long requesterId, Long targetUserId) {
         User requester = userRepository.findById(requesterId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.USER_NOT_FOUND));
@@ -55,7 +53,6 @@ public class BookshelfService {
         return buildUserShelf(target);
     }
 
-    /** 내 답변 일괄 저장/수정 (null/빈문자열 허용 → null로 정규화) */
     @Transactional
     public void writeMyAnswers(Long meId, BookshelfAnswersUpsertRequestDto req) {
         User me = userRepository.findById(meId)
@@ -65,14 +62,12 @@ public class BookshelfService {
             throw new GeneralException(ErrorStatus.BOOKSHELF_INVALID_PARAMETER);
         }
 
-        // 1) 요청 payload 수집
         Map<Long, String> payload = new HashMap<>();
         for (BookshelfAnswersUpsertRequestDto.ItemDto p : req.items()) {
             payload.put(p.questionId(), normalize(p.answer()));
         }
         if (payload.isEmpty()) return;
 
-        // 2) 질문 일괄 로딩 및 존재 검증
         List<Long> qids = new ArrayList<>(payload.keySet());
         List<BookshelfQuestion> questions = questionRepository.findAllById(qids);
         Map<Long, BookshelfQuestion> qmap = questions.stream()
@@ -82,7 +77,6 @@ public class BookshelfService {
             throw new GeneralException(ErrorStatus.BOOKSHELF_QUESTION_NOT_FOUND);
         }
 
-        // 3) 가족 권한 검증 (CUSTOM 질문은 반드시 내 가족 소유)
         Long myFamilyId = authService.getFamilyId(me.getId());
         for (BookshelfQuestion q : questions) {
             if (q.getScope() == QuestionScope.CUSTOM) {
@@ -93,7 +87,6 @@ public class BookshelfService {
             }
         }
 
-        // 4) 업서트
         for (Long qid : qids) {
             BookshelfQuestion q = qmap.get(qid);
             String ans = payload.get(qid);
@@ -108,7 +101,6 @@ public class BookshelfService {
         }
     }
 
-    /** 커스텀 질문 생성 (기존 CustomBookshelfService.createQuestion 로직 통합) */
     @Transactional
     public BookshelfEntryDto createCustomQuestion(Long userId, CustomBookshelfQuestionCreateRequestDto req) {
         User user = userRepository.findById(userId)
@@ -118,18 +110,16 @@ public class BookshelfService {
         if (familyId == null) {
             throw new GeneralException(ErrorStatus.NOT_IN_FAMILY_YET);
         }
-        Family family = user.getFamily(); // 동일 컨텍스트에서 사용
+        Family family = user.getFamily();
 
-        // 유니크 제약(질문 텍스트) 선택적으로 체크
         if (questionRepository.existsByQuestionText(req.question())) {
             throw new GeneralException(ErrorStatus.DUPLICATE_RESOURCE);
         }
 
-        // 엔티티 팩토리 사용 (BASE/CUSTOM 구분)
         BookshelfQuestion q = BookshelfQuestion.custom(
-                req.question(),         // text
-                "TEXT",                 // 기본 타입 가정(필요 시 req에서 받기)
-                null,                   // options
+                req.question(),
+                "TEXT",
+                null,
                 family,
                 user
         );
@@ -138,7 +128,6 @@ public class BookshelfService {
         return new BookshelfEntryDto(saved.getId(), saved.getQuestionText(), null);
     }
 
-    /** 커스텀 질문 삭제 (기존 CustomBookshelfService.deleteQuestion 로직 통합) */
     @Transactional
     public void deleteCustomQuestion(Long userId, Long questionId) {
         User user = userRepository.findById(userId)
@@ -157,14 +146,10 @@ public class BookshelfService {
             throw new GeneralException(ErrorStatus.FORBIDDEN);
         }
 
-        // 주의: FK 제약(answers) 때문에 삭제가 거부될 수 있음. 필요 시 Answer 먼저 삭제하도록 확장.
-        // 먼저 해당 질문의 모든 답변 삭제 (FK 제약 회피)
         answerRepository.deleteByQuestionId(questionId);
-        // 질문 삭제
         questionRepository.delete(q);
     }
 
-    // 내부 도우미: 질문 + 해당 유저 답변을 합쳐 ShelfResponse 생성 (BASE + 내 가족 CUSTOM)
     private BookshelfUserViewDto buildUserShelf(User user) {
         Long familyId = authService.getFamilyId(user.getId());
 
@@ -173,7 +158,6 @@ public class BookshelfService {
                 ? questionRepository.findAllByScopeAndFamily_Id(QuestionScope.CUSTOM, familyId)
                 : Collections.emptyList();
 
-        // 정렬(필요 시 id 기준)
         List<BookshelfQuestion> questions = new ArrayList<>(base.size() + customs.size());
         questions.addAll(base);
         questions.addAll(customs);

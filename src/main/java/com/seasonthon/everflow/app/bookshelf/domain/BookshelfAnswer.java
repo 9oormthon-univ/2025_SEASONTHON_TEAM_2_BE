@@ -22,17 +22,14 @@ public class BookshelfAnswer {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    /** 기본 가족 책장 질문(고정 15문항)에 대한 참조 */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "question_id", nullable = false)
     private BookshelfQuestion question;
 
-    /** 답변 작성자 (User → Family를 통해 가족 식별 가능) */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    /** 답변 내용 (null 허용) */
     @Column(columnDefinition = "TEXT", nullable = true)
     private String answer;
 
@@ -46,7 +43,7 @@ public class BookshelfAnswer {
     private BookshelfAnswer(BookshelfQuestion question, User user, String answer) {
         this.question = question;
         this.user = user;
-        this.answer = answer; // null 허용
+        this.answer = answer;
     }
 
     @PrePersist
@@ -60,6 +57,6 @@ public class BookshelfAnswer {
     }
 
     public void updateAnswer(String newAnswer) {
-        this.answer = newAnswer; // null 가능
+        this.answer = newAnswer;
     }
 }

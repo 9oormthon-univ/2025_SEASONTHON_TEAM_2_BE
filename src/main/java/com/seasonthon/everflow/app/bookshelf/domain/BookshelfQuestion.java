@@ -25,32 +25,27 @@ public class BookshelfQuestion {
     @Column(name = "question_text", nullable = false, length = 500, unique = true)
     private String questionText;
 
-    // TEXT / SELECT (당장은 문자열로 유지, 나중에 enum으로 뺄 수 있음)
     @Column(name = "question_type", nullable = false, length = 20)
     private String questionType;
 
-    // BASE / CUSTOM
     @Enumerated(EnumType.STRING)
     @Column(name = "scope", nullable = false, length = 16)
     private QuestionScope scope;
 
-    // SELECT일 때 옵션(콤마/JSON 등)
     @Column(name = "options", length = 2000)
     private String options;
 
     @Column(name = "is_active", nullable = false)
     private boolean isActive = true;
 
-    // 커스텀 질문 메타
     @ManyToOne(fetch = FetchType.LAZY, optional = true)
     @JoinColumn(name = "family_id")
-    private Family family;        // BASE일 때는 null
+    private Family family;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = true)
     @JoinColumn(name = "created_by")
-    private User createdBy;       // BASE일 때는 null
+    private User createdBy;
 
-    // 감사 필드 (스프링 데이터 JPA Auditing)
     @CreatedDate
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
@@ -76,7 +71,6 @@ public class BookshelfQuestion {
         this.createdBy = createdBy;
     }
 
-    // 팩토리 메서드: 기본 질문
     public static BookshelfQuestion base(String text, String type, String options) {
         return BookshelfQuestion.builder()
                 .questionText(text)
@@ -89,7 +83,6 @@ public class BookshelfQuestion {
                 .build();
     }
 
-    // 팩토리 메서드: 커스텀 질문
     public static BookshelfQuestion custom(String text, String type, String options,
                                            Family family, User createdBy) {
         return BookshelfQuestion.builder()

@@ -2,7 +2,6 @@ package com.seasonthon.everflow.app.bookshelf.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
-/* 책장 항목: 질문 + (해당 사용자 기준) 답변 */
 public record BookshelfEntryDto(
         @Schema(description = "질문 ID", example = "1")
         Long questionId,

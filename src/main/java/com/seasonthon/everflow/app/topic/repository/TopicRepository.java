@@ -19,8 +19,6 @@ public interface TopicRepository extends JpaRepository<Topic, Long> {
 
     Optional<Topic> findFirstByStatusOrderByIdAsc(TopicStatus status);
 
-    List<Topic> findByStatusAndActiveUntilBefore(TopicStatus status, LocalDateTime time);
-
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
    update Topic t

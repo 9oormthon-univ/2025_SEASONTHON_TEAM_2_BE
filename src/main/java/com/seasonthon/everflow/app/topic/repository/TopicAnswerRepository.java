@@ -14,14 +14,14 @@ public interface TopicAnswerRepository extends JpaRepository<TopicAnswer, Long> 
 
     Optional<TopicAnswer> findByTopicIdAndUserId(Long topicId, Long userId);
 
-    List<TopicAnswer> findAllByTopicId(Long topicId);
+    List<TopicAnswer> findAllByTopicIdOrderByCreatedAtDesc(Long topicId);
 
     @Query("""
       select ta from TopicAnswer ta
       join fetch ta.user u
       where ta.topic.id = :topicId
-        and u.family.id = :familyId
-      order by ta.createdAt asc
+        and ta.familyId = :familyId
+      order by ta.createdAt desc
     """)
     List<TopicAnswer> findFamilyAnswersByTopic(@Param("topicId") Long topicId, @Param("familyId") Long familyId);
 
@@ -29,8 +29,8 @@ public interface TopicAnswerRepository extends JpaRepository<TopicAnswer, Long> 
       select ta from TopicAnswer ta
       join fetch ta.user u
       where ta.topic.id = :activeTopicId
-        and u.family.id = :familyId
-      order by ta.createdAt asc
+        and ta.familyId = :familyId
+      order by ta.createdAt desc
     """)
     List<TopicAnswer> findFamilyAnswers(@Param("activeTopicId") Long activeTopicId, @Param("familyId") Long familyId);
 
@@ -38,8 +38,8 @@ public interface TopicAnswerRepository extends JpaRepository<TopicAnswer, Long> 
       select ta from TopicAnswer ta
       join fetch ta.user u
       join fetch ta.topic t
-      where u.family.id = :familyId
-      order by t.activeFrom desc, ta.createdAt asc
+      where ta.familyId = :familyId
+      order by t.activeFrom desc, ta.createdAt desc
     """)
     List<TopicAnswer> findAllByFamilyId(@Param("familyId") Long familyId);
 
@@ -48,7 +48,7 @@ public interface TopicAnswerRepository extends JpaRepository<TopicAnswer, Long> 
     @Query("""
       select u.id, count(ta)
       from TopicAnswer ta join ta.user u
-      where u.family.id = :familyId
+      where ta.familyId = :familyId
       group by u.id
     """)
     List<Object[]> countByFamilyGroup(@Param("familyId") Long familyId);
@@ -63,7 +63,7 @@ public interface TopicAnswerRepository extends JpaRepository<TopicAnswer, Long> 
     @Query("""
       select u.id, count(ta)
       from TopicAnswer ta join ta.user u join ta.topic t
-      where u.family.id = :familyId and t.status = :status
+      where ta.familyId = :familyId and t.status = :status
       group by u.id
     """)
     List<Object[]> countActiveByFamilyGroup(@Param("familyId") Long familyId, @Param("status") TopicStatus status);
@@ -77,7 +77,7 @@ public interface TopicAnswerRepository extends JpaRepository<TopicAnswer, Long> 
     @Query("""
       select u.id, count(ta)
       from TopicAnswer ta join ta.user u
-      where u.family.id = :familyId and ta.createdAt >= :from
+      where ta.familyId = :familyId and ta.createdAt >= :from
       group by u.id
     """)
     List<Object[]> countSinceByFamilyGroup(@Param("familyId") Long familyId, @Param("from") LocalDateTime from);
