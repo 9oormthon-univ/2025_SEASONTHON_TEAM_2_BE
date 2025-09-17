@@ -81,4 +81,6 @@ public interface TopicAnswerRepository extends JpaRepository<TopicAnswer, Long> 
       group by u.id
     """)
     List<Object[]> countSinceByFamilyGroup(@Param("familyId") Long familyId, @Param("from") LocalDateTime from);
+
+    void deleteAllByUserId(Long userId);
 }

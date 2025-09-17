@@ -14,4 +14,6 @@ public interface FamilyJoinRequestRepository extends JpaRepository<FamilyJoinReq
     Optional<FamilyJoinRequest> findByFamilyIdAndUserId(Long familyId, Long userId);
 
     List<FamilyJoinRequest> findAllByFamilyIdAndStatus(Long familyId, JoinStatus status);
+
+    void deleteAllByUserId(Long userId);
 }

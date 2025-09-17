@@ -27,4 +27,5 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
             @Param("status") ReadStatus status,
             @Param("excludedTypes") List<NotificationType> excludedTypes
     );
+    void deleteAllByUserId(Long userId);
 }
