@@ -10,7 +10,6 @@ import com.seasonthon.everflow.app.appointment.repository.AppointmentRepository;
 import com.seasonthon.everflow.app.global.code.status.ErrorStatus;
 import com.seasonthon.everflow.app.global.oauth.domain.CustomUserDetails;
 import com.seasonthon.everflow.app.global.oauth.service.AuthService;
-import com.seasonthon.everflow.app.notification.domain.Notification;
 import com.seasonthon.everflow.app.notification.domain.NotificationType;
 import com.seasonthon.everflow.app.notification.repository.NotificationRepository;
 import com.seasonthon.everflow.app.notification.service.NotificationService;
@@ -77,7 +76,7 @@ public class AppointmentService {
                         .user(participantUser)
                         .acceptStatus(AcceptStatus.PENDING)
                         .build())
-                .collect(Collectors.toList());
+                .toList();
 
         // 4. 참여자 목록을 appointment에 추가
         savedAppointment.getParticipants().addAll(appointmentParticipants);
