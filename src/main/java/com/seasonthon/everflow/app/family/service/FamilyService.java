@@ -69,7 +69,7 @@ public class FamilyService {
 
         /* 가족 생성 시 공유 메모 자동 생성 (가족당 1장) */
         if (!memoRepository.existsByFamilyId(savedFamily.getId())) {
-            memoRepository.save(Memo.create(savedFamily.getId(), user.getId()));
+            memoRepository.save(Memo.create(savedFamily.getId()));
         }
     }
 
@@ -125,7 +125,7 @@ public class FamilyService {
         familyRepository.save(family);
         /* 기존 가족(레거시)에 메모가 없을 경우 보강 생성 */
         if (!memoRepository.existsByFamilyId(family.getId())) {
-            memoRepository.save(Memo.create(family.getId(), user.getId()));
+            memoRepository.save(Memo.create(family.getId()));
         }
         notifyFamilyResponse(family, user);
         return new JoinAttemptResponseDto(true, false, SuccessStatus.OK);
@@ -241,7 +241,7 @@ public class FamilyService {
         familyRepository.save(family);
         /* 메모 기능 도입 이전에 생성된 가족의 경우 보강 생성 */
         if (!memoRepository.existsByFamilyId(family.getId())) {
-            memoRepository.save(Memo.create(family.getId(), user.getId()));
+            memoRepository.save(Memo.create(family.getId()));
         }
     }
 

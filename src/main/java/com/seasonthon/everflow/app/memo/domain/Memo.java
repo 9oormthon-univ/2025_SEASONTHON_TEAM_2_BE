@@ -23,9 +23,6 @@ public class Memo {
     @Column(name = "family_id", nullable = false, unique = true)
     private Long familyId;
 
-    @Column(name = "updated_by", nullable = false)
-    private Long updatedBy;
-
     /** 메모 본문 (최대 800자) */
     @Column(nullable = false, length = 800)
     private String content;
@@ -43,18 +40,16 @@ public class Memo {
     @Column(name = "updated_at", nullable = false, columnDefinition = "datetime(6)")
     private LocalDateTime updatedAt;
 
-    private Memo(Long familyId, Long updatedBy) {
+    private Memo(Long familyId) {
         this.familyId = familyId;
-        this.updatedBy = updatedBy;
         this.content = "";
     }
 
-    public static Memo create(Long familyId, Long userId) {
-        return new Memo(familyId, userId);
+    public static Memo create(Long familyId) {
+        return new Memo(familyId);
     }
 
-    public void applyContent(String newContent, Long editorUserId) {
+    public void applyContent(String newContent) {
         this.content = (newContent == null) ? "" : newContent;
-        this.updatedBy = editorUserId;
     }
 }
