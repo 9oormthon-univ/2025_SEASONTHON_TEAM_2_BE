@@ -29,7 +29,7 @@ public class MemoController {
         );
     }
 
-    /* 메모 수정 (본문만 수정, 버전은 서버 자동 관리) */
+    /* 메모 수정 (본문만 수정, 버전은 서버에서 자동 관리 함) */
     @Operation(summary = "우리 가족 메모 수정", description = "로그인한 사용자가 속한 가족의 메모 본문을 수정합니다. " + "버전은 서버에서 자동 관리되며, 최종 본문 길이는 최대 800자입니다.")
     @PatchMapping
     public ApiResponse<MemoDto> updateMemo(@AuthenticationPrincipal CustomUserDetails me,
