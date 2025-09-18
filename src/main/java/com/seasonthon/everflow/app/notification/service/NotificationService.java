@@ -24,10 +24,9 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 public class NotificationService {
 
-    private static final Long DEFAULT_TIMEOUT = 60L * 1000 * 60; // 1시간
+    private static final Long DEFAULT_TIMEOUT = 30L * 1000 * 60; // 30분
 
     private final NotificationRepository notificationRepository;
     private final EmitterRepository emitterRepository;
@@ -98,6 +97,7 @@ public class NotificationService {
         }
     }
 
+    // DB에 데이터를 쓰는 메서드이므로 @Transactional 추가
     @Transactional
     public NotificationResponseDto.ReadResponseDto readNotification(Long notificationId, Long userId) {
         // 1. notificationId로 알림을 찾습니다. 없으면 예외를 발생시킵니다.
@@ -133,6 +133,7 @@ public class NotificationService {
         return new NotificationResponseDto.ReadResponseDto("모든 알림을 읽음 처리했습니다.");
     }
 
+    @Transactional(readOnly = true)
     public List<NotificationResponseDto.NotificationGetResponseDto> getNotifications(Long userId) {
         // 새로 추가한 메서드를 사용하여 UNREAD 상태의 알림만 조회
         List<Notification> notifications = notificationRepository.findAllByUserIdAndReadStatusOrderByCreatedAtDesc(userId, ReadStatus.UNREAD);
@@ -142,6 +143,7 @@ public class NotificationService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public List<NotificationResponseDto.NotificationGetResponseDto> getRecentNotifications(Long userId) {
         List<Notification> notifications = notificationRepository.findTop3ByUserIdAndReadStatusOrderByCreatedAtDesc(userId, ReadStatus.UNREAD);
 
