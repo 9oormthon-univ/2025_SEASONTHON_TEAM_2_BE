@@ -163,4 +163,15 @@ public class AuthService {
         }
         return me.getUserId();
     }
+
+    @Transactional(readOnly = true)
+    public Long getUserIdFromToken(String token) {
+        if (!jwtService.isTokenValid(token)) {
+            throw new GeneralException(ErrorStatus.INVALID_TOKEN);
+        }
+        return jwtService.extractEmail(token)
+                .flatMap(userRepository::findByEmail)
+                .map(User::getId)
+                .orElseThrow(() -> new GeneralException(ErrorStatus.USER_NOT_FOUND));
+    }
 }
