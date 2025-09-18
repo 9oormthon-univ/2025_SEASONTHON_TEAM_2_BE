@@ -1,14 +1,11 @@
 package com.seasonthon.everflow.app.notification.controller;
 
 import com.seasonthon.everflow.app.global.code.dto.ApiResponse;
-import com.seasonthon.everflow.app.global.code.status.ErrorStatus;
 import com.seasonthon.everflow.app.global.code.status.SuccessStatus;
-import com.seasonthon.everflow.app.global.exception.GeneralException;
 import com.seasonthon.everflow.app.global.oauth.domain.CustomUserDetails;
-import com.seasonthon.everflow.app.global.security.JwtService;
+import com.seasonthon.everflow.app.global.oauth.service.AuthService; // AuthService를 import 합니다.
 import com.seasonthon.everflow.app.notification.dto.NotificationResponseDto;
 import com.seasonthon.everflow.app.notification.service.NotificationService;
-import com.seasonthon.everflow.app.user.repository.UserRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -27,20 +24,13 @@ import java.util.List;
 public class NotificationController {
 
     private final NotificationService notificationService;
-    private final JwtService jwtService; // 의존성 추가
-    private final UserRepository userRepository; // 의존성 추가
+    private final AuthService authService; // 기존 의존성을 AuthService로 변경합니다.
 
     @Operation(summary = "알림 구독", description = "실시간 알림을 받기 위해 SSE 연결을 설정합니다. (text/event-stream)")
     @GetMapping(value = "/subscribe", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public SseEmitter subscribe(@RequestParam("token") String token) { // 파라미터 변경
-        if (!jwtService.isTokenValid(token)) {
-            throw new GeneralException(ErrorStatus.INVALID_TOKEN);
-        }
-        Long userId = jwtService.extractEmail(token)
-                .flatMap(userRepository::findByEmail)
-                .map(com.seasonthon.everflow.app.user.domain.User::getId)
-                .orElseThrow(() -> new GeneralException(ErrorStatus.USER_NOT_FOUND));
-
+    public SseEmitter subscribe(@RequestParam("token") String token) {
+        // 1단계에서 추가한 서비스 메서드를 호출하도록 수정합니다.
+        Long userId = authService.getUserIdFromToken(token);
         return notificationService.subscribe(userId);
     }
 
