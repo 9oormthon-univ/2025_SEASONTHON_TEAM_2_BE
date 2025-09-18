@@ -30,6 +30,17 @@ public class JwtAuthenticationProcessingFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
 
+        if (request.getRequestURI().equals("/api/notifications/subscribe")) {
+            String token = request.getParameter("token");
+            if (token != null && jwtService.isTokenValid(token)) {
+                jwtService.extractEmail(token)
+                        .flatMap(userRepository::findByEmail)
+                        .ifPresent(this::saveAuthentication);
+            }
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         if (request.getRequestURI().equals("/auth/login")) {
             filterChain.doFilter(request, response);
             return;

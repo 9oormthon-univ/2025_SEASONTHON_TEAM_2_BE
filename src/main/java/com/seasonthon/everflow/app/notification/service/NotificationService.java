@@ -1,5 +1,6 @@
 package com.seasonthon.everflow.app.notification.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.seasonthon.everflow.app.global.code.status.ErrorStatus;
 import com.seasonthon.everflow.app.global.exception.GeneralException;
 import com.seasonthon.everflow.app.notification.domain.Notification;
@@ -26,25 +27,34 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = true)
 public class NotificationService {
 
-    private static final Long DEFAULT_TIMEOUT = 60L * 1000 * 60;
+    private static final Long DEFAULT_TIMEOUT = 60L * 1000 * 60; // 1시간
 
     private final NotificationRepository notificationRepository;
     private final EmitterRepository emitterRepository;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     public SseEmitter subscribe(Long userId) {
         String emitterId = userId + "_" + System.currentTimeMillis();
         SseEmitter emitter = new SseEmitter(DEFAULT_TIMEOUT);
         emitterRepository.save(emitterId, emitter);
 
-        emitter.onCompletion(() -> emitterRepository.deleteById(emitterId));
-        emitter.onTimeout(() -> emitterRepository.deleteById(emitterId));
+        emitter.onCompletion(() -> {
+            log.info("SSE onCompletion callback for emitterId: {}", emitterId);
+            emitterRepository.deleteById(emitterId);
+        });
+        emitter.onTimeout(() -> {
+            log.info("SSE onTimeout callback for emitterId: {}", emitterId);
+            emitterRepository.deleteById(emitterId);
+        });
 
         // 503 에러 방지를 위한 더미 이벤트 전송
+        log.info("Sending initial dummy event for emitterId: {}", emitterId);
         sendToClient(emitter, emitterId, "EventStream Created. [userId=" + userId + "]");
 
         return emitter;
     }
 
+    @Transactional
     public void sendNotification(User recipient, NotificationType type, String content, String link) {
         Notification notification = Notification.builder()
                 .user(recipient)
@@ -54,22 +64,37 @@ public class NotificationService {
                 .build();
         notificationRepository.save(notification);
 
+        log.info("Notification saved for user {}. Content: {}", recipient.getId(), content);
+
         Map<String, SseEmitter> emitters = emitterRepository.findAllByUserId(String.valueOf(recipient.getId()));
+        log.info("Found {} emitters for user {}", emitters.size(), recipient.getId());
+
         emitters.forEach((emitterId, emitter) -> {
             NotificationResponseDto.NotificationGetResponseDto responseDto = mapToNotificationGetResponseDto(notification);
+            log.info("Sending notification to emitterId: {}", emitterId);
             sendToClient(emitter, emitterId, responseDto);
         });
     }
 
     private void sendToClient(SseEmitter emitter, String emitterId, Object data) {
         try {
-            emitter.send(SseEmitter.event()
+            String jsonData;
+            if (data instanceof String) {
+                jsonData = (String) data;
+            } else {
+                jsonData = objectMapper.writeValueAsString(data);
+            }
+
+            SseEmitter.SseEventBuilder event = SseEmitter.event()
                     .id(emitterId)
                     .name("sse")
-                    .data(data));
+                    .data(jsonData); // 데이터를 JSON 문자열로 전송
+            emitter.send(event);
+            log.info("Successfully sent data to emitterId: {}: {}", emitterId, jsonData);
+
         } catch (IOException e) {
             emitterRepository.deleteById(emitterId);
-            log.error("SSE 연결 오류!", e);
+            log.error("SSE connection error for emitterId: {}! - {}", emitterId, e.getMessage());
         }
     }
 
@@ -144,5 +169,4 @@ public class NotificationService {
             default -> "기타알림";
         };
     }
-
 }
