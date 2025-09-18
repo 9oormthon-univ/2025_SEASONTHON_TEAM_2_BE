@@ -25,12 +25,15 @@ public class JwtAuthenticationProcessingFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
     private final UserRepository userRepository;
     private final TokenBlacklistService tokenBlacklistService;
+    private final GrantedAuthoritiesMapper authoritiesMapper = new NullAuthoritiesMapper();
 
-    private GrantedAuthoritiesMapper authoritiesMapper = new NullAuthoritiesMapper();
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        // SSE 구독 경로에 대한 특별 처리 로직 제거
-        if (request.getRequestURI().equals("/auth/login")) {
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+            throws ServletException, IOException {
+
+        String uri = request.getRequestURI();
+
+        if (uri.equals("/auth/login") || uri.equals("/api/notifications/subscribe")) {
             filterChain.doFilter(request, response);
             return;
         }
@@ -47,16 +50,17 @@ public class JwtAuthenticationProcessingFilter extends OncePerRequestFilter {
         checkAccessTokenAndAuthentication(request, response, filterChain);
     }
 
-    public void checkRefreshTokenAndReIssueAccessToken(HttpServletResponse response, String refreshToken) {
+    private void checkRefreshTokenAndReIssueAccessToken(HttpServletResponse response, String refreshToken) {
         userRepository.findByRefreshToken(refreshToken)
                 .ifPresent(user -> {
-                    if (user.isWithdrawn()) {
-                        return;
+                    if (!user.isWithdrawn()) {
+                        String reIssuedRefreshToken = reIssueRefreshToken(user);
+                        jwtService.sendAccessAndRefreshToken(
+                                response,
+                                jwtService.createAccessToken(user.getEmail(), user.getId(), user.getRoleType().toString()),
+                                reIssuedRefreshToken
+                        );
                     }
-                    String reIssuedRefreshToken = reIssueRefreshToken(user);
-                    // roleType 파라미터 추가
-                    jwtService.sendAccessAndRefreshToken(response, jwtService.createAccessToken(user.getEmail(), user.getId(), user.getRoleType().toString()),
-                            reIssuedRefreshToken);
                 });
     }
 
@@ -67,9 +71,8 @@ public class JwtAuthenticationProcessingFilter extends OncePerRequestFilter {
         return reIssuedRefreshToken;
     }
 
-    public void checkAccessTokenAndAuthentication(HttpServletRequest request, HttpServletResponse response,
-                                                  FilterChain filterChain) throws ServletException, IOException {
-
+    private void checkAccessTokenAndAuthentication(HttpServletRequest request, HttpServletResponse response,
+                                                   FilterChain filterChain) throws ServletException, IOException {
         Optional<String> accessTokenOpt = jwtService.extractAccessToken(request);
 
         if (accessTokenOpt.isPresent()) {
@@ -97,16 +100,15 @@ public class JwtAuthenticationProcessingFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
-    public void saveAuthentication(User myUser) {
+    private void saveAuthentication(User myUser) {
         CustomUserDetails userDetailsUser = new CustomUserDetails(
                 Collections.singleton(new SimpleGrantedAuthority(myUser.getRoleType().toString())),
                 myUser.getEmail(),
                 myUser.getRoleType(),
                 myUser.getId());
 
-        Authentication authentication =
-                new UsernamePasswordAuthenticationToken(userDetailsUser, null,
-                        authoritiesMapper.mapAuthorities(userDetailsUser.getAuthorities()));
+        Authentication authentication = new UsernamePasswordAuthenticationToken(
+                userDetailsUser, null, authoritiesMapper.mapAuthorities(userDetailsUser.getAuthorities()));
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
     }

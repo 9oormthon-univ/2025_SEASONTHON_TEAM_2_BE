@@ -42,10 +42,8 @@ public class SecurityConfig {
                         .requestMatchers("/auth/**", "/api/v1/auth/**").permitAll()
                         // Swagger 문서 경로는 모두 허용
                         .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
-                        // 실시간 알림 구독 모두 허용
-                        .requestMatchers("/api/notifications/subscribe").permitAll() // 수정된 부분
-                        // 그 외 모든 요청은 인증 필요 (코드 가입 예외 부분 추가)
                         .requestMatchers("/family/verify/**").permitAll()
+                        .requestMatchers("/api/notifications/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 // JWT 인증 필터를 UsernamePasswordAuthenticationFilter 이전에 추가
@@ -57,7 +55,11 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000", "http://localhost:5173", "https://everflowfront.vercel.app"));
+        configuration.setAllowedOrigins(Arrays.asList(
+                "http://localhost:3000",
+                "http://localhost:5173",
+                "https://everflowfront.vercel.app"
+        ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "RefreshToken", "id_token", "Content-Type"));
         configuration.setExposedHeaders(Arrays.asList("Authorization", "RefreshToken"));

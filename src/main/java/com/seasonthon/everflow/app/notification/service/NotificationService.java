@@ -10,6 +10,7 @@ import com.seasonthon.everflow.app.notification.dto.NotificationResponseDto;
 import com.seasonthon.everflow.app.notification.repository.EmitterRepository;
 import com.seasonthon.everflow.app.notification.repository.NotificationRepository;
 import com.seasonthon.everflow.app.user.domain.User;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -18,12 +19,11 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
-@Slf4j
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class NotificationService {
 
     private static final Long DEFAULT_TIMEOUT = 30L * 1000 * 60; // 30분
@@ -38,18 +38,19 @@ public class NotificationService {
         emitterRepository.save(emitterId, emitter);
 
         emitter.onCompletion(() -> {
-            log.info("SSE onCompletion callback for emitterId: {}", emitterId);
+            log.info("SSE completed: {}", emitterId);
             emitterRepository.deleteById(emitterId);
         });
         emitter.onTimeout(() -> {
-            log.info("SSE onTimeout callback for emitterId: {}", emitterId);
+            log.info("SSE timeout: {}", emitterId);
+            emitterRepository.deleteById(emitterId);
+        });
+        emitter.onError(e -> {
+            log.info("SSE error: {} - {}", emitterId, e.toString());
             emitterRepository.deleteById(emitterId);
         });
 
-        // 503 에러 방지를 위한 더미 이벤트 전송
-        log.info("Sending initial dummy event for emitterId: {}", emitterId);
         sendToClient(emitter, emitterId, "EventStream Created. [userId=" + userId + "]");
-
         return emitter;
     }
 
@@ -77,23 +78,17 @@ public class NotificationService {
 
     private void sendToClient(SseEmitter emitter, String emitterId, Object data) {
         try {
-            String jsonData;
-            if (data instanceof String) {
-                jsonData = (String) data;
-            } else {
-                jsonData = objectMapper.writeValueAsString(data);
-            }
-
+            Object payload = (data instanceof String) ? data : objectMapper.writeValueAsString(data);
             SseEmitter.SseEventBuilder event = SseEmitter.event()
-                    .id(emitterId)
+                    .id(Long.toString(System.currentTimeMillis()))
                     .name("sse")
-                    .data(jsonData); // 데이터를 JSON 문자열로 전송
-            emitter.send(event);
-            log.info("Successfully sent data to emitterId: {}: {}", emitterId, jsonData);
+                    .data(payload);
 
+            emitter.send(event);
+            log.info("Sent data to {}: {}", emitterId, payload);
         } catch (IOException e) {
             emitterRepository.deleteById(emitterId);
-            log.error("SSE connection error for emitterId: {}! - {}", emitterId, e.getMessage());
+            log.error("SSE send error {} - {}", emitterId, e.getMessage());
         }
     }
 

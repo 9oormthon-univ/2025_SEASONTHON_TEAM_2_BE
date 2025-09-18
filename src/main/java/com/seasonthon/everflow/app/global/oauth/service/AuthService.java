@@ -21,8 +21,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
-@Transactional
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class AuthService {
 
     private final UserRepository userRepository;
@@ -162,5 +162,15 @@ public class AuthService {
             throw new GeneralException(ErrorStatus.AUTH_REQUIRED);
         }
         return me.getUserId();
+    }
+
+    public Long getUserIdFromToken(String token) {
+        if (!jwtService.isTokenValid(token)) {
+            throw new GeneralException(ErrorStatus.INVALID_TOKEN);
+        }
+        return jwtService.extractEmail(token)
+                .flatMap(userRepository::findByEmail)
+                .map(User::getId)
+                .orElseThrow(() -> new GeneralException(ErrorStatus.USER_NOT_FOUND));
     }
 }
