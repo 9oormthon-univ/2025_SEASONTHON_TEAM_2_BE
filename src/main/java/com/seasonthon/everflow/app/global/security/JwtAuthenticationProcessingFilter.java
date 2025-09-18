@@ -29,18 +29,7 @@ public class JwtAuthenticationProcessingFilter extends OncePerRequestFilter {
     private GrantedAuthoritiesMapper authoritiesMapper = new NullAuthoritiesMapper();
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-
-        if (request.getRequestURI().equals("/api/notifications/subscribe")) {
-            String token = request.getParameter("token");
-            if (token != null && jwtService.isTokenValid(token)) {
-                jwtService.extractEmail(token)
-                        .flatMap(userRepository::findByEmail)
-                        .ifPresent(this::saveAuthentication);
-            }
-            filterChain.doFilter(request, response);
-            return;
-        }
-
+        // SSE 구독 경로에 대한 특별 처리 로직 제거
         if (request.getRequestURI().equals("/auth/login")) {
             filterChain.doFilter(request, response);
             return;
