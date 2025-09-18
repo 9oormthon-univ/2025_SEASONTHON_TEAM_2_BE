@@ -1,8 +1,8 @@
 <h1> <p align="center"> ☁️[2025 kakao X 9oorm 시즌톤]2팀 Everflow(에버플로우)☁️ </p> </h1>
 <p align="center">$\huge{\rm{\color{#5ad7b7}세대를\ 잇는\ 소통의\ 흐름}}$</p>
 <h2> <p align="center">🌊 Everflow 와 함께해보세요.</p> </h2>
+<img width="7680" height="4320" alt="에버플로우_아키텍쳐맵" src="https://github.com/user-attachments/assets/b16beb8a-a993-4d4b-b40b-ed8805f8fb0d" />
 
-<img width="1920" height="1080" alt="에버플로우_아키텍쳐맵" src="https://github.com/user-attachments/assets/752430aa-aa51-47e9-8764-f21266954c02" />
 <h2> <p align="center">“여러분은 부모님이나 자녀에 대해 얼마나 알고 계신가요?”</p></h2>  
 <p align="center">
     $\rm{\color{#5ad7b7}{매일\ 함께\ 지내고\ 대화를\ 나누더라도,\ 가족\ 간의\ 생각이나\ 취향,\ 감정은\ 종종\ 놓치기\ 마련입니다.}}$<br>
