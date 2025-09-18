@@ -17,12 +17,12 @@ import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 public class AuthService {
 
     private final UserRepository userRepository;
@@ -30,6 +30,7 @@ public class AuthService {
     private final JwtService jwtService;
     private final TokenBlacklistService tokenBlacklistService;
 
+    /** 쓰기 */
     @Transactional
     public LoginResponseDto login(String idToken) {
         // ID 토큰을 검증하고 사용자 정보(CustomUserDetails)를 가져옵니다.
@@ -49,6 +50,7 @@ public class AuthService {
         return new LoginResponseDto(accessToken, refreshToken);
     }
 
+    /** 읽기 */
     @Transactional(readOnly = true)
     public UserInfoResponseDto getUserInfo(Long userId) {
         User user = userRepository.findById(userId)
@@ -66,14 +68,15 @@ public class AuthService {
         );
     }
 
+    /** 쓰기 */
     @Transactional
     public void logout(HttpServletRequest request) {
         String accessToken = jwtService.extractAccessToken(request)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.INVALID_TOKEN));
-
         tokenBlacklistService.blacklistToken(accessToken);
     }
 
+    /** 쓰기 */
     @Transactional
     public LoginResponseDto testAppleLogin(String email, String nickname) {
         if (userRepository.findByEmail(email).isPresent()) {
@@ -100,18 +103,17 @@ public class AuthService {
         String roleType = user.getRoleType().toString();
         String accessToken = jwtService.createAccessToken(user.getEmail(), user.getId(), roleType);
         String refreshToken = jwtService.createRefreshToken();
-
         jwtService.updateRefreshToken(user.getEmail(), refreshToken);
 
         return new LoginResponseDto(accessToken, refreshToken);
     }
 
+    /** 쓰기 */
     @Transactional
     public LoginResponseDto reissue(String refreshToken) {
         if (refreshToken == null || refreshToken.isBlank()) {
             throw new GeneralException(ErrorStatus.MISSING_PARAMETER);
         }
-
         if (!jwtService.isTokenValid(refreshToken)) {
             throw new GeneralException(ErrorStatus.INVALID_TOKEN);
         }
@@ -129,44 +131,37 @@ public class AuthService {
         return new LoginResponseDto(newAccessToken, newRefreshToken);
     }
 
-    /**
-     * userId로 familyId 조회 (없으면 예외)
-     */
+    /** 읽기 */
     @Transactional(readOnly = true)
     public Long getFamilyId(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.USER_NOT_FOUND));
-        if (user.getFamily() == null) {
-            throw new GeneralException(ErrorStatus.FAMILY_NOT_FOUND);
-        }
+        if (user.getFamily() == null) throw new GeneralException(ErrorStatus.FAMILY_NOT_FOUND);
         return user.getFamily().getId();
     }
 
-    /**
-     * 인증 객체로 바로 familyId 조회 (미인증/가족없음 예외)
-     */
+    /** 읽기 */
     @Transactional(readOnly = true)
     public Long getFamilyId(CustomUserDetails me) {
-        if (me == null) {
-            throw new GeneralException(ErrorStatus.AUTH_REQUIRED);
-        }
+        if (me == null) throw new GeneralException(ErrorStatus.AUTH_REQUIRED);
         return getFamilyId(me.getUserId());
     }
 
-    /**
-     * 인증 객체에서 userId 반환 (미인증 예외)
-     */
+    /** 읽기 */
     @Transactional(readOnly = true)
     public Long getUserId(CustomUserDetails me) {
-        if (me == null) {
-            throw new GeneralException(ErrorStatus.AUTH_REQUIRED);
-        }
+        if (me == null) throw new GeneralException(ErrorStatus.AUTH_REQUIRED);
         return me.getUserId();
     }
 
-    @Transactional(readOnly = true)
+    /**
+     *  - DB 접근 없이 JWT claim으로만 userId를 추출
+     */
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public Long getUserIdFromToken(String token) {
-        if (!jwtService.isTokenValid(token)) throw new GeneralException(ErrorStatus.INVALID_TOKEN);
+        if (!jwtService.isTokenValid(token)) {
+            throw new GeneralException(ErrorStatus.INVALID_TOKEN);
+        }
         return jwtService.extractUserId(token)
                 .orElseThrow(() -> new GeneralException(ErrorStatus.USER_NOT_FOUND));
     }

@@ -13,8 +13,8 @@ import java.time.LocalDateTime;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
-@Table(name = "family_bookshelf")
 @EntityListeners(AuditingEntityListener.class)
+@Table(name = "family_bookshelf")
 public class BookshelfQuestion {
 
     @Id

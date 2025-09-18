@@ -14,7 +14,5 @@ public interface BookshelfQuestionRepository extends JpaRepository<BookshelfQues
 
     List<BookshelfQuestion> findAllByScopeAndFamily_Id(QuestionScope scope, Long familyId);
 
-    boolean existsByQuestionText(String questionText);
-
     void deleteAllByCreatedById(Long userId);
 }

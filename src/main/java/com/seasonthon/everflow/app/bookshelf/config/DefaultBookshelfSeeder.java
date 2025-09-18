@@ -7,7 +7,8 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -47,22 +48,33 @@ public class DefaultBookshelfSeeder implements CommandLineRunner {
     @Override
     @Transactional
     public void run(String... args) {
+        // DB에 있는 모든 질문 가져오기
+        Map<String, BookshelfQuestion> existingMap = repository.findAll()
+                .stream()
+                .collect(Collectors.toMap(BookshelfQuestion::getQuestionText, q -> q));
+
+        List<BookshelfQuestion> toSave = new ArrayList<>();
+
         for (String q : DEFAULTS) {
-            repository.findByQuestionText(q).ifPresentOrElse(
-                    exist -> {
-                        if (q.equals(MBTI_TEXT) && (exist.getOptions() == null || exist.getOptions().isBlank())) {
-                            exist.updateOptions(MBTI_OPTIONS);
-                        }
-                    },
-                    () -> {
-                        boolean isMbti = q.equals(MBTI_TEXT);
-                        repository.save(BookshelfQuestion.base(
-                                q,
-                                isMbti ? "SELECT" : "TEXT",
-                                isMbti ? MBTI_OPTIONS : null
-                        ));
-                    }
-            );
+            BookshelfQuestion exist = existingMap.get(q);
+
+            if (exist != null) {
+                // MBTI 질문인데 옵션이 비어있으면 업데이트
+                if (q.equals(MBTI_TEXT) && (exist.getOptions() == null || exist.getOptions().isBlank())) {
+                    exist.updateOptions(MBTI_OPTIONS);
+                }
+            } else {
+                boolean isMbti = q.equals(MBTI_TEXT);
+                toSave.add(BookshelfQuestion.base(
+                        q,
+                        isMbti ? "SELECT" : "TEXT",
+                        isMbti ? MBTI_OPTIONS : null
+                ));
+            }
+        }
+
+        if (!toSave.isEmpty()) {
+            repository.saveAll(toSave);
         }
     }
 }

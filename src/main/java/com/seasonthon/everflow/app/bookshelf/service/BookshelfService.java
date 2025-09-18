@@ -16,6 +16,7 @@ import com.seasonthon.everflow.app.global.oauth.service.AuthService;
 import com.seasonthon.everflow.app.user.domain.User;
 import com.seasonthon.everflow.app.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -112,20 +113,14 @@ public class BookshelfService {
         }
         Family family = user.getFamily();
 
-        if (questionRepository.existsByQuestionText(req.question())) {
+        try {
+            BookshelfQuestion saved = questionRepository.save(
+                    BookshelfQuestion.custom(req.question(), "TEXT", null, family, user)
+            );
+            return new BookshelfEntryDto(saved.getId(), saved.getQuestionText(), null);
+        } catch (DataIntegrityViolationException e) {
             throw new GeneralException(ErrorStatus.DUPLICATE_RESOURCE);
         }
-
-        BookshelfQuestion q = BookshelfQuestion.custom(
-                req.question(),
-                "TEXT",
-                null,
-                family,
-                user
-        );
-
-        BookshelfQuestion saved = questionRepository.save(q);
-        return new BookshelfEntryDto(saved.getId(), saved.getQuestionText(), null);
     }
 
     @Transactional
