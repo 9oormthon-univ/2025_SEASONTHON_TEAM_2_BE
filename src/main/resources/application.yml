@@ -27,7 +27,13 @@ spring:
     url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:dbtablename}
     username: ${DB_USERNAME:admin}
     password: ${DB_PASSWORD:pw}
-
+    hikari:
+      maximum-pool-size: 30
+      minimum-idle: 10
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      connection-timeout: 30000
+      leak-detection-threshold: 20000
   jpa:
     hibernate:
       ddl-auto: update
