@@ -1,4 +1,4 @@
-<h1> <p align="center"> ☁️ [2025 kakao X 9oorm 시즌톤] 2팀 Everflow (에버플로우) ☁️ </p> </h1>
+<h1> <p align="center"> ☁️[2025 kakao X 9oorm 시즌톤]2팀 Everflow(에버플로우)☁️ </p> </h1>
 <p align="center">$\huge{\rm{\color{#5ad7b7}세대를\ 잇는\ 소통의\ 흐름}}$</p>
 <h2> <p align="center">🌊 Everflow 와 함께해보세요.</p> </h2>
 
