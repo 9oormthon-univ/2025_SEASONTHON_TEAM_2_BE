@@ -178,4 +178,20 @@ public class JwtService {
             throw new GeneralException(ErrorStatus.INVALID_TOKEN);
         }
     }
+
+    /**
+     * Access Token에서 userId 추출
+     */
+    public Optional<Long> extractUserId(String accessToken) {
+        try {
+            return Optional.ofNullable(JWT.require(Algorithm.HMAC512(secretKey))
+                    .build()
+                    .verify(accessToken)
+                    .getClaim(USERID_CLAIM)
+                    .asLong());
+        } catch (Exception e) {
+            log.warn("유효하지 않은 Access Token 입니다. {}", e.getMessage());
+            return Optional.empty();
+        }
+    }
 }
