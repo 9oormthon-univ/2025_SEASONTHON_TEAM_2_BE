@@ -43,7 +43,7 @@ public class SecurityConfig {
                         // Swagger 문서 경로는 모두 허용
                         .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         // 실시간 알림 구독 모두 허용
-                        .requestMatchers("/api/notifications/subscribe").permitAll()
+//                        .requestMatchers("/api/notifications/subscribe").permitAll()
                         // 그 외 모든 요청은 인증 필요 (코드 가입 예외 부분 추가)
                         .requestMatchers("/family/verify/**").permitAll()
                         .anyRequest().authenticated()
